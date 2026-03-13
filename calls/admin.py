@@ -1,0 +1,1 @@
+from django.contrib import adminfrom .models import Call@admin.register(Call)class CallAdmin(admin.ModelAdmin):    list_display = ("caller_number", "caller_name", "status", "created_at")    list_filter = ("status", "created_at")    search_fields = ("caller_number", "caller_name", "summary", "transcript")

@@ -1,0 +1,38 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Décroche.ai{% endblock %}</title>
+    <meta name="description" content="Décroche.ai - Agent téléphonique IA connecté à vos outils">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+    <header class="site-header">
+        <div class="container nav">
+            <a href="{% url 'home' %}" class="logo-wrap">
+                <span class="logo-dot"></span>
+                <span class="logo-text">Décroche.ai</span>
+            </a>
+
+            <nav class="menu">
+                <a href="#how-it-works">Comment ça marche</a>
+                <a href="#use-cases">Cas d’usage</a>
+                <a href="#cta">Démo</a>
+            </nav>
+
+            <a href="#cta" class="btn btn-nav">Essayer gratuitement</a>
+        </div>
+    </header>
+
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>

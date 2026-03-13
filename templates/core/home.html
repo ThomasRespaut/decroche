@@ -1,0 +1,470 @@
+{% extends "base.html" %}
+
+{% block title %}Décroche.ai | L’agent téléphonique IA connecté à vos outils{% endblock %}
+
+{% block content %}
+<section class="hero">
+    <div class="container hero-grid">
+        <div class="hero-content">
+            <span class="hero-badge">Agent téléphonique IA pour entreprises</span>
+
+            <h1>
+                Vos appels ne tombent plus dans le vide.
+                <span class="gradient-text">Ils deviennent des actions.</span>
+            </h1>
+
+            <p class="hero-description">
+                Décroche.ai répond à vos appels en temps réel, échange naturellement avec vos clients,
+                comprend leur besoin, agit dans vos outils métier, envoie une confirmation si nécessaire
+                et vous transmet un compte-rendu complet pour ne rien perdre.
+            </p>
+
+            <div class="hero-actions">
+                <a href="#cta" class="btn btn-primary">Demander une démo</a>
+                <a href="#how-it-works" class="btn btn-secondary">Voir comment ça marche</a>
+            </div>
+
+            <div class="hero-trust">
+                <span>Réponses en temps réel</span>
+                <span>Voix naturelle</span>
+                <span>Connecté à vos outils</span>
+            </div>
+        </div>
+
+        <div class="hero-visual">
+            <div class="mockup-card main-card">
+                <div class="mockup-top">
+                    <span class="status-dot"></span>
+                    <span>Appel traité en direct</span>
+                </div>
+
+                <h3>Décroche.ai comprend, agit et confirme</h3>
+                <p>
+                    Réservation, modification, demande urgente, qualification commerciale,
+                    prise de rendez-vous ou simple demande d’information :
+                    l’IA gère l’échange et déclenche la bonne action.
+                </p>
+
+                <div class="mockup-tags">
+                    <span>Réservation</span>
+                    <span>Rendez-vous</span>
+                    <span>CRM</span>
+                    <span>SMS</span>
+                </div>
+            </div>
+
+            <div class="mockup-card floating-card card-one">
+                <p class="mini-label">Client</p>
+                <strong>SMS envoyé : votre réservation pour 4 personnes à 20h30 est confirmée.</strong>
+            </div>
+
+            <div class="mockup-card floating-card card-two">
+                <p class="mini-label">Entreprise</p>
+                <strong>Résumé complet reçu avec demande client, action effectuée et prochaine étape.</strong>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="process-section" id="how-it-works">
+    <div class="container">
+        <div class="section-heading centered">
+            <span class="section-label">Comment ça marche</span>
+            <h2>De l’appel entrant à l’action métier, en quelques secondes</h2>
+            <p>
+                Décroche.ai ne prend pas juste un message. Il traite l’appel de bout en bout,
+                comme un véritable assistant téléphonique opérationnel.
+            </p>
+        </div>
+
+        <div class="process-flow">
+            <article class="process-step">
+                <div class="process-icon">1</div>
+                <h3>Le prospect appelle votre numéro</h3>
+                <p>
+                    Vos clients continuent d’appeler votre numéro habituel, sans rien changer à leurs habitudes.
+                </p>
+            </article>
+
+            <article class="process-step">
+                <div class="process-icon">2</div>
+                <h3>L’appel est transféré à l’IA</h3>
+                <p>
+                    Quand vous le souhaitez, Décroche.ai prend le relais automatiquement pendant que vous êtes occupé.
+                </p>
+            </article>
+
+            <article class="process-step">
+                <div class="process-icon">3</div>
+                <h3>L’IA échange en temps réel</h3>
+                <p>
+                    Elle pose des questions, comprend les réponses et adapte la conversation au besoin réel du client.
+                </p>
+            </article>
+
+            <article class="process-step">
+                <div class="process-icon">4</div>
+                <h3>Elle agit dans vos outils</h3>
+                <p>
+                    Calendrier, réservation, CRM, prise de rendez-vous, SMS : l’action utile est déclenchée immédiatement.
+                </p>
+            </article>
+
+            <article class="process-step">
+                <div class="process-icon">5</div>
+                <h3>Tout le monde reçoit la bonne info</h3>
+                <p>
+                    Le client peut recevoir une confirmation, et vous obtenez un résumé complet sans perdre aucun détail.
+                </p>
+            </article>
+        </div>
+    </div>
+</section>
+
+<section class="conversation-section">
+    <div class="container">
+        <div class="section-heading">
+            <span class="section-label">Exemple concret</span>
+            <h2>Une conversation fluide, pas un simple script</h2>
+            <p>
+                Décroche.ai répond au tac au tac, reformule si nécessaire et mène l’échange
+                comme un vrai assistant téléphonique.
+            </p>
+        </div>
+
+        <div class="conversation-layout">
+            <div class="conversation-card">
+                <div class="conversation-header">
+                    <span class="conversation-pill">Exemple restaurant</span>
+                </div>
+
+                <div class="chat">
+                    <div class="chat-bubble user">
+                        <p>Bonjour, je voudrais réserver une table pour 4 ce soir.</p>
+                    </div>
+
+                    <div class="chat-bubble ai">
+                        <p>Bien sûr. À quelle heure souhaitez-vous venir ?</p>
+                    </div>
+
+                    <div class="chat-bubble user">
+                        <p>20h30.</p>
+                    </div>
+
+                    <div class="chat-bubble ai">
+                        <p>Parfait. Puis-je avoir votre nom s’il vous plaît ?</p>
+                    </div>
+
+                    <div class="chat-bubble user">
+                        <p>Martin.</p>
+                    </div>
+
+                    <div class="chat-bubble ai">
+                        <p>
+                            Merci. Je confirme une réservation pour 4 personnes à 20h30 au nom de Martin.
+                            Vous allez recevoir un SMS de confirmation.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="actions-card">
+                <h3>Actions générées automatiquement</h3>
+
+                <ul class="actions-list">
+                    <li>Réservation ajoutée dans l’outil</li>
+                    <li>SMS de confirmation envoyé au client</li>
+                    <li>Résumé détaillé transmis à l’entreprise</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="use-cases" id="use-cases">
+    <div class="container">
+        <div class="section-heading">
+            <span class="section-label">Cas d’usage</span>
+            <h2>Des scénarios concrets pour comprendre l’intérêt</h2>
+            <p>
+                Décroche.ai s’adapte au fonctionnement de votre entreprise et au type d’appels que vous recevez.
+            </p>
+        </div>
+
+        <div class="use-cases-grid">
+            <article class="use-case-card">
+                <h3>Restaurants</h3>
+                <p>
+                    L’IA prend les réservations, confirme le nombre de personnes, l’horaire, le nom du client,
+                    puis envoie un SMS de confirmation.
+                </p>
+            </article>
+
+            <article class="use-case-card">
+                <h3>Hôtels</h3>
+                <p>
+                    Un client veut modifier une réservation ? Décroche.ai comprend la demande,
+                    met à jour l’information dans le bon outil et confirme le changement.
+                </p>
+            </article>
+
+            <article class="use-case-card">
+                <h3>Artisans</h3>
+                <p>
+                    Quand vous êtes en intervention, l’IA filtre les urgences, récupère l’adresse,
+                    comprend le problème et peut indiquer un délai d’intervention.
+                </p>
+            </article>
+
+            <article class="use-case-card">
+                <h3>Professions de service</h3>
+                <p>
+                    Prise de rendez-vous, collecte d’informations, qualification de besoin, rappel programmé :
+                    l’IA gère les demandes pendant que vous travaillez.
+                </p>
+            </article>
+
+            <article class="use-case-card">
+                <h3>Commerces locaux</h3>
+                <p>
+                    Disponibilité, horaires, commande, retrait, question produit :
+                    les demandes simples ne partent plus chez un concurrent faute de réponse.
+                </p>
+            </article>
+
+            <article class="use-case-card">
+                <h3>Équipes commerciales</h3>
+                <p>
+                    Décroche.ai qualifie les leads entrants, récupère le besoin,
+                    alimente le CRM et prépare le rappel commercial.
+                </p>
+            </article>
+        </div>
+    </div>
+</section>
+
+<section class="reassurance-section">
+    <div class="container">
+        <div class="section-heading">
+            <span class="section-label">Simplicité & contrôle</span>
+            <h2>Pensé pour être simple à mettre en place et rassurant à utiliser</h2>
+            <p>
+                Le but n’est pas de bouleverser votre organisation, mais d’ajouter un relais intelligent
+                quand vous ne pouvez pas répondre vous-même.
+            </p>
+        </div>
+
+        <div class="reassurance-grid">
+            <article class="reassurance-card">
+                <h3>Vous gardez votre numéro</h3>
+                <p>
+                    Pas besoin de changer vos habitudes ni celles de vos clients. Décroche.ai fonctionne
+                    avec votre numéro habituel.
+                </p>
+            </article>
+
+            <article class="reassurance-card">
+                <h3>Activation en un clic</h3>
+                <p>
+                    Vous décidez quand l’IA prend le relais. Elle peut être activée ou désactivée
+                    quand vous le souhaitez.
+                </p>
+            </article>
+
+            <article class="reassurance-card">
+                <h3>Transfert seulement quand vous le voulez</h3>
+                <p>
+                    L’appel est dirigé vers l’IA uniquement dans les moments où vous choisissez
+                    de lui déléguer la ligne.
+                </p>
+            </article>
+
+            <article class="reassurance-card">
+                <h3>Vous gardez le contrôle</h3>
+                <p>
+                    Vous définissez le cadre, les actions possibles, le ton, les réponses attendues
+                    et les scénarios autorisés.
+                </p>
+            </article>
+        </div>
+    </div>
+</section>
+
+<section class="realtime-section">
+    <div class="container">
+        <div class="section-heading centered">
+            <span class="section-label">Temps réel</span>
+            <h2>Une IA qui répond comme un vrai assistant, pas comme un serveur vocal</h2>
+            <p>
+                Beaucoup imaginent une voix rigide ou des scénarios figés. Décroche.ai est conçu
+                pour offrir une expérience fluide, réactive et crédible.
+            </p>
+        </div>
+
+        <div class="realtime-grid">
+            <article class="realtime-card">
+                <div class="feature-icon">01</div>
+                <h3>Réponse immédiate</h3>
+                <p>
+                    L’IA répond sans attente inutile et enchaîne naturellement dans la conversation.
+                </p>
+            </article>
+
+            <article class="realtime-card">
+                <div class="feature-icon">02</div>
+                <h3>Voix naturelle</h3>
+                <p>
+                    L’expérience est fluide, professionnelle et pensée pour rassurer l’appelant.
+                </p>
+            </article>
+
+            <article class="realtime-card">
+                <div class="feature-icon">03</div>
+                <h3>Conversation dynamique</h3>
+                <p>
+                    L’IA écoute ce qui est dit, pose les bonnes questions et adapte la suite de l’échange.
+                </p>
+            </article>
+        </div>
+    </div>
+</section>
+
+<section class="summary-section">
+    <div class="container summary-grid">
+        <div>
+            <div class="section-heading">
+                <span class="section-label">Après l’appel</span>
+                <h2>Vous récupérez l’essentiel sans perdre le moindre détail</h2>
+                <p>
+                    Même si vous n’avez pas pris l’appel vous-même, vous savez exactement
+                    ce qui s’est passé, ce qui a été demandé et ce qui a été fait.
+                </p>
+            </div>
+
+            <ul class="summary-points">
+                <li>Nom et coordonnées du client</li>
+                <li>Objet précis de l’appel</li>
+                <li>Informations collectées pendant l’échange</li>
+                <li>Action effectuée par l’IA</li>
+                <li>Confirmation éventuelle envoyée au client</li>
+                <li>Prochaine étape recommandée</li>
+            </ul>
+        </div>
+
+        <div class="summary-card">
+            <p class="mini-label">Exemple de compte-rendu</p>
+            <h3>Appel reçu — demande urgente serrurier</h3>
+
+            <div class="summary-items">
+                <div class="summary-item">
+                    <span class="summary-key">Client</span>
+                    <span class="summary-value">Mme Dupont</span>
+                </div>
+
+                <div class="summary-item">
+                    <span class="summary-key">Demande</span>
+                    <span class="summary-value">Porte claquée, intervention urgente</span>
+                </div>
+
+                <div class="summary-item">
+                    <span class="summary-key">Adresse</span>
+                    <span class="summary-value">12 rue X, Nanterre</span>
+                </div>
+
+                <div class="summary-item">
+                    <span class="summary-key">Délai annoncé</span>
+                    <span class="summary-value">Intervention possible sous 30 min</span>
+                </div>
+
+                <div class="summary-item">
+                    <span class="summary-key">Action effectuée</span>
+                    <span class="summary-value">Demande qualifiée et transmise</span>
+                </div>
+
+                <div class="summary-item">
+                    <span class="summary-key">Suivi</span>
+                    <span class="summary-value">Prioritaire</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="faq-section">
+    <div class="container">
+        <div class="section-heading centered">
+            <span class="section-label">FAQ</span>
+            <h2>Les questions qu’on se pose avant d’essayer</h2>
+        </div>
+
+        <div class="faq-grid">
+            <article class="faq-card">
+                <h3>Faut-il changer de numéro de téléphone ?</h3>
+                <p>
+                    Non. Vous gardez votre numéro habituel. Les appels peuvent être transférés
+                    vers Décroche.ai quand vous le souhaitez.
+                </p>
+            </article>
+
+            <article class="faq-card">
+                <h3>Est-ce juste un script automatique ?</h3>
+                <p>
+                    Non. Les échanges se font en temps réel. L’IA écoute, comprend et adapte
+                    la conversation selon ce que dit l’appelant.
+                </p>
+            </article>
+
+            <article class="faq-card">
+                <h3>La voix sonne-t-elle naturelle ?</h3>
+                <p>
+                    Oui. L’expérience est conçue pour être fluide, crédible et agréable pour le client.
+                </p>
+            </article>
+
+            <article class="faq-card">
+                <h3>Peut-elle vraiment agir dans mes outils ?</h3>
+                <p>
+                    Oui. Selon votre configuration, Décroche.ai peut créer un rendez-vous,
+                    modifier une réservation, envoyer un SMS, alimenter un CRM et plus encore.
+                </p>
+            </article>
+
+            <article class="faq-card">
+                <h3>Est-ce que je garde le contrôle ?</h3>
+                <p>
+                    Oui. Vous définissez quand l’IA est active, ce qu’elle peut faire
+                    et les types d’actions autorisées.
+                </p>
+            </article>
+
+            <article class="faq-card">
+                <h3>Que reçois-je après un appel ?</h3>
+                <p>
+                    Vous recevez un résumé détaillé avec les informations clés, les actions effectuées
+                    et les prochaines étapes éventuelles.
+                </p>
+            </article>
+        </div>
+    </div>
+</section>
+
+<section class="cta-section" id="cta">
+    <div class="container">
+        <div class="cta-card">
+            <div>
+                <span class="section-label">Démo</span>
+                <h2>Ne laissez plus un appel important devenir une opportunité perdue</h2>
+                <p>
+                    Décroche.ai transforme votre ligne téléphonique en agent IA capable de répondre,
+                    comprendre, agir et confirmer en temps réel.
+                </p>
+            </div>
+
+            <div class="cta-actions">
+                <a href="#" class="btn btn-primary">Essayer gratuitement</a>
+                <a href="#" class="btn btn-secondary">Demander une démo</a>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
