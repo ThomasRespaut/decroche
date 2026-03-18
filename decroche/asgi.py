@@ -2,7 +2,6 @@
 import os
 
 from channels.routing import ProtocolTypeRouter, URLRouter
-from channels.security.websocket import AllowedHostsOriginValidator
 from django.core.asgi import get_asgi_application
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "decroche.settings")
@@ -17,7 +16,5 @@ print("=== websocket_urlpatterns =", core.routing.websocket_urlpatterns, "===")
 
 application = ProtocolTypeRouter({
     "http": django_asgi_app,
-    "websocket": AllowedHostsOriginValidator(
-        URLRouter(core.routing.websocket_urlpatterns)
-    ),
+    "websocket": URLRouter(core.routing.websocket_urlpatterns),
 })
