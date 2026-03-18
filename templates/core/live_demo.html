@@ -1,0 +1,362 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Démo vocale | Décroche.ai{% endblock %}
+
+{% block content %}
+<section class="live-demo-page">
+    <div class="container">
+        <div class="live-demo-shell">
+            <div class="live-demo-top">
+                <span class="section-label">Démo vocale</span>
+                <h1>Parlez en direct avec l’IA</h1>
+                <p>
+                    Testez Décroche.ai directement depuis votre navigateur.
+                    Cliquez sur démarrer, autorisez le micro, puis parlez naturellement.
+                </p>
+            </div>
+
+            <div class="voice-panel">
+                <div class="voice-status-wrap">
+                    <div class="voice-orb" id="voiceOrb"></div>
+                    <div>
+                        <p class="mini-label">Statut</p>
+                        <h3 id="sessionStatus">Prêt à démarrer</h3>
+                    </div>
+                </div>
+
+                <div class="voice-actions">
+                    <button class="btn btn-primary" id="startSessionBtn">Démarrer la conversation</button>
+                    <button class="btn btn-danger" id="stopSessionBtn" disabled>Couper</button>
+                    <button class="btn btn-secondary" id="resetTranscriptBtn">Reset la transcription</button>
+                </div>
+
+                <div class="voice-info-grid">
+                    <div class="voice-info-card">
+                        <p class="mini-label">Micro</p>
+                        <strong id="micStatus">Inactif</strong>
+                    </div>
+
+                    <div class="voice-info-card">
+                        <p class="mini-label">Connexion</p>
+                        <strong id="connectionStatus">Déconnecté</strong>
+                    </div>
+
+                    <div class="voice-info-card">
+                        <p class="mini-label">Mode</p>
+                        <strong>Temps réel</strong>
+                    </div>
+                </div>
+            </div>
+
+            <div class="transcript-panel">
+                <div class="transcript-header">
+                    <h2>Transcript en direct</h2>
+                    <p>Affichage simple des échanges pendant la démonstration.</p>
+                </div>
+
+                <div class="transcript-log" id="transcriptLog">
+                    <div class="transcript-empty">
+                        La conversation apparaîtra ici une fois la session démarrée.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <audio id="remoteAudio" autoplay></audio>
+</section>
+
+<script>
+(() => {
+    const startBtn = document.getElementById("startSessionBtn");
+    const stopBtn = document.getElementById("stopSessionBtn");
+    const resetTranscriptBtn = document.getElementById("resetTranscriptBtn");
+    const sessionStatus = document.getElementById("sessionStatus");
+    const connectionStatus = document.getElementById("connectionStatus");
+    const micStatus = document.getElementById("micStatus");
+    const transcriptLog = document.getElementById("transcriptLog");
+    const remoteAudio = document.getElementById("remoteAudio");
+    const voiceOrb = document.getElementById("voiceOrb");
+
+    let pc = null;
+    let dc = null;
+    let localStream = null;
+    let lastAssistantText = "";
+    let lastUserText = "";
+
+    function setStatus(text) {
+        sessionStatus.textContent = text;
+    }
+
+    function setConnection(text) {
+        connectionStatus.textContent = text;
+    }
+
+    function setMic(text) {
+        micStatus.textContent = text;
+    }
+
+    function renderEmptyTranscript() {
+        transcriptLog.innerHTML = `
+            <div class="transcript-empty">
+                La conversation apparaîtra ici une fois la session démarrée.
+            </div>
+        `;
+    }
+
+    function resetTranscript() {
+        lastAssistantText = "";
+        lastUserText = "";
+        renderEmptyTranscript();
+    }
+
+    function setLiveState(isLive) {
+        voiceOrb.classList.toggle("is-live", isLive);
+        startBtn.disabled = isLive;
+        stopBtn.disabled = !isLive;
+    }
+
+    function addTranscript(role, text) {
+        if (!text || !text.trim()) return;
+
+        const empty = transcriptLog.querySelector(".transcript-empty");
+        if (empty) empty.remove();
+
+        const item = document.createElement("div");
+        item.className = `transcript-item ${role}`;
+
+        const roleEl = document.createElement("div");
+        roleEl.className = "transcript-role";
+        roleEl.textContent = role === "user" ? "Vous" : "IA";
+
+        const textEl = document.createElement("div");
+        textEl.className = "transcript-text";
+        textEl.textContent = text;
+
+        item.appendChild(roleEl);
+        item.appendChild(textEl);
+        transcriptLog.appendChild(item);
+        transcriptLog.scrollTop = transcriptLog.scrollHeight;
+    }
+
+    function addAssistantOnce(text) {
+        const clean = (text || "").trim();
+        if (!clean) return;
+        if (clean === lastAssistantText) return;
+        lastAssistantText = clean;
+        addTranscript("assistant", clean);
+    }
+
+    function addUserOnce(text) {
+        const clean = (text || "").trim();
+        if (!clean) return;
+        if (clean === lastUserText) return;
+        lastUserText = clean;
+        addTranscript("user", clean);
+    }
+
+    function getCookie(name) {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) return parts.pop().split(";").shift();
+        return "";
+    }
+
+    async function getEphemeralKey() {
+        const response = await fetch("{% url 'create_realtime_session' %}", {
+            method: "POST",
+            headers: {
+                "X-CSRFToken": getCookie("csrftoken"),
+                "X-Requested-With": "XMLHttpRequest",
+            },
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.error || "Impossible de créer la session.");
+        }
+
+        return data.client_secret;
+    }
+
+    function extractAssistantTextFromResponseDone(data) {
+        if (!data || data.type !== "response.done" || !data.response?.output) {
+            return null;
+        }
+
+        for (const item of data.response.output) {
+            if (!item?.content) continue;
+
+            for (const part of item.content) {
+                if (part?.transcript && part.transcript.trim()) {
+                    return part.transcript.trim();
+                }
+
+                if (part?.text && part.text.trim()) {
+                    return part.text.trim();
+                }
+            }
+        }
+
+        return null;
+    }
+
+    async function startSession() {
+        try {
+            setStatus("Création de la session…");
+            setConnection("Connexion…");
+
+            const ephemeralKey = await getEphemeralKey();
+            if (!ephemeralKey) {
+                throw new Error("Clé éphémère introuvable.");
+            }
+
+            localStream = await navigator.mediaDevices.getUserMedia({
+                audio: true
+            });
+
+            setMic("Actif");
+
+            pc = new RTCPeerConnection();
+
+            pc.onconnectionstatechange = () => {
+                const state = pc.connectionState;
+                setConnection(state);
+
+                if (state === "connected") {
+                    setStatus("En conversation");
+                    setLiveState(true);
+                }
+
+                if (["failed", "disconnected", "closed"].includes(state)) {
+                    setStatus("Session terminée");
+                    setLiveState(false);
+                }
+            };
+
+            pc.ontrack = (event) => {
+                remoteAudio.srcObject = event.streams[0];
+            };
+
+            localStream.getTracks().forEach(track => {
+                pc.addTrack(track, localStream);
+            });
+
+            dc = pc.createDataChannel("oai-events");
+
+            dc.onopen = () => {
+                console.log("Data channel ouvert");
+
+                dc.send(JSON.stringify({
+                    type: "response.create",
+                    response: {
+                        modalities: ["audio", "text"],
+                        instructions: "Salue l’utilisateur en français et propose une courte démonstration."
+                    }
+                }));
+            };
+
+            dc.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    console.log("Realtime event:", data);
+
+                    if (
+                        data.type === "conversation.item.input_audio_transcription.completed" &&
+                        data.transcript
+                    ) {
+                        addUserOnce(data.transcript);
+                        return;
+                    }
+
+                    if (
+                        data.type === "response.output_audio_transcript.done" &&
+                        data.transcript
+                    ) {
+                        addAssistantOnce(data.transcript);
+                        return;
+                    }
+
+                    if (
+                        data.type === "response.output_text.done" &&
+                        data.text
+                    ) {
+                        addAssistantOnce(data.text);
+                        return;
+                    }
+
+                    const fallbackAssistantText = extractAssistantTextFromResponseDone(data);
+                    if (fallbackAssistantText) {
+                        addAssistantOnce(fallbackAssistantText);
+                    }
+                } catch (err) {
+                    console.warn("Message non géré:", err);
+                }
+            };
+
+            const offer = await pc.createOffer();
+            await pc.setLocalDescription(offer);
+
+            const sdpResponse = await fetch("https://api.openai.com/v1/realtime/calls", {
+                method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${ephemeralKey}`,
+                    "Content-Type": "application/sdp"
+                },
+                body: offer.sdp
+            });
+
+            if (!sdpResponse.ok) {
+                const errText = await sdpResponse.text();
+                throw new Error(`Échec SDP: ${errText}`);
+            }
+
+            const answerSdp = await sdpResponse.text();
+
+            await pc.setRemoteDescription({
+                type: "answer",
+                sdp: answerSdp
+            });
+
+            setStatus("Connexion établie");
+        } catch (error) {
+            console.error(error);
+            alert(error.message || "Une erreur est survenue.");
+            stopSession();
+        }
+    }
+
+    function stopSession() {
+        if (dc) {
+            try { dc.close(); } catch (e) {}
+            dc = null;
+        }
+
+        if (pc) {
+            try { pc.close(); } catch (e) {}
+            pc = null;
+        }
+
+        if (localStream) {
+            localStream.getTracks().forEach(track => track.stop());
+            localStream = null;
+        }
+
+        remoteAudio.srcObject = null;
+        lastAssistantText = "";
+        lastUserText = "";
+
+        setStatus("Prêt à démarrer");
+        setConnection("Déconnecté");
+        setMic("Inactif");
+        setLiveState(false);
+    }
+
+    startBtn.addEventListener("click", startSession);
+    stopBtn.addEventListener("click", stopSession);
+    resetTranscriptBtn.addEventListener("click", resetTranscript);
+})();
+</script>
+{% endblock %}

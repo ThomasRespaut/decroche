@@ -1,10 +1,20 @@
+# -*- coding: utf-8 -*-
+import os
 from pathlib import Path
+from dotenv import load_dotenv
+
+load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = "django-insecure-change-me-in-production"
-DEBUG = True
-ALLOWED_HOSTS = []
+SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "django-insecure-change-me-in-production")
+DEBUG = os.getenv("DEBUG", "True").lower() == "true"
+
+ALLOWED_HOSTS = [
+    host.strip()
+    for host in os.getenv("ALLOWED_HOSTS", "127.0.0.1,localhost").split(",")
+    if host.strip()
+]
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -13,6 +23,8 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+
+    "channels",
 
     "core",
     "accounts",
@@ -47,6 +59,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = "decroche.wsgi.application"
+ASGI_APPLICATION = "decroche.asgi.application"
 
 DATABASES = {
     "default": {
@@ -83,3 +96,26 @@ MEDIA_URL = "media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# --------------------------------------------------
+# Channels
+# --------------------------------------------------
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels.layers.InMemoryChannelLayer",
+    },
+}
+
+# --------------------------------------------------
+# OpenAI / Twilio / URLs publiques
+# --------------------------------------------------
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
+OPENAI_REALTIME_MODEL = os.getenv("OPENAI_REALTIME_MODEL", "gpt-realtime")
+OPENAI_VOICE = os.getenv("OPENAI_VOICE", "marin")
+
+TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID", "")
+TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN", "")
+TWILIO_TEST_CALLER_NUMBER = os.getenv("TWILIO_TEST_CALLER_NUMBER", "")
+
+PUBLIC_BASE_URL = os.getenv("PUBLIC_BASE_URL", "").rstrip("/")
+PUBLIC_WSS_BASE_URL = os.getenv("PUBLIC_WSS_BASE_URL", "").rstrip("/")

@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}Décroche.ai | L’agent téléphonique IA connecté à vos outils{% endblock %}
 
@@ -20,7 +21,7 @@
             </p>
 
             <div class="hero-actions">
-                <a href="#cta" class="btn btn-primary">Demander une démo</a>
+                <a href="#demo" class="btn btn-primary">Essayer la démo</a>
                 <a href="#how-it-works" class="btn btn-secondary">Voir comment ça marche</a>
             </div>
 
@@ -447,7 +448,7 @@
         </div>
     </div>
 </section>
-
+    
 <section class="cta-section" id="cta">
     <div class="container">
         <div class="cta-card">
@@ -461,10 +462,74 @@
             </div>
 
             <div class="cta-actions">
-                <a href="#" class="btn btn-primary">Essayer gratuitement</a>
-                <a href="#" class="btn btn-secondary">Demander une démo</a>
+                <a href="#demo" class="btn btn-primary">Essayer la démo</a>
+                <a href="#cta" class="btn btn-secondary">Demander une démo</a>
             </div>
         </div>
     </div>
 </section>
+    
+<section class="demo-section" id="demo">
+    <div class="container">
+        <div class="section-heading centered">
+            <span class="section-label">Démonstration</span>
+            <h2>Testez Décroche.ai de 3 façons</h2>
+            <p>
+                Écoutez un appel réel, échangez en direct avec l’IA ou recevez un appel
+                de démonstration sur votre téléphone.
+            </p>
+        </div>
+
+        <div class="demo-grid">
+            <article class="demo-card">
+                <div class="demo-icon">01</div>
+                <h3>Écouter un appel réel</h3>
+                <p>
+                    Découvrez une conversation entre un client et Décroche.ai pour voir
+                    la fluidité, le ton et les actions déclenchées.
+                </p>
+
+                <div class="demo-audio">
+                    <audio controls preload="none">
+                        <source src="{% static 'audio/demo-call.mp3' %}" type="audio/mpeg">
+                        Votre navigateur ne supporte pas l’audio.
+                    </audio>
+                </div>
+            </article>
+
+            <article class="demo-card">
+                <div class="demo-icon">02</div>
+                <h3>Parler en direct avec l’IA</h3>
+                <p>
+                    Lancez une conversation vocale en temps réel directement depuis votre navigateur.
+                </p>
+
+                <div class="demo-actions">
+                    <a href="{% url 'live_demo' %}" class="btn btn-primary">Lancer la démo live</a>
+                </div>
+            </article>
+
+            <article class="demo-card">
+                <div class="demo-icon">03</div>
+                <h3>Recevoir un appel de démonstration</h3>
+                <p>
+                    Saisissez votre numéro et laissez l’IA vous appeler pour tester
+                    l’expérience dans des conditions réelles.
+                </p>
+
+                <form class="demo-call-form" method="post" action="{% url 'request_demo_call' %}">
+                    {% csrf_token %}
+                    <input
+                        type="tel"
+                        name="phone"
+                        placeholder="06 12 34 56 78"
+                        required
+                    >
+                    <button type="submit" class="btn btn-secondary">Recevoir un appel</button>
+                </form>
+            </article>
+        </div>
+    </div>
+</section>
+       
 {% endblock %}
