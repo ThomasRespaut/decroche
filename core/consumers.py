@@ -220,48 +220,41 @@ class TwilioStreamConsumer(AsyncWebsocketConsumer):
             "type": "session.update",
             "session": {
                 "instructions": prompt,
+                "voice": settings.OPENAI_VOICE,
                 "input_audio_format": "g711_ulaw",
                 "output_audio_format": "g711_ulaw",
                 "audio": {
                     "input": {
-                        "turn_detection": {"type": "server_vad"},
+                        "turn_detection": {
+                            "type": "server_vad",
+                            "create_response": True,
+                        },
                         "transcription": {
                             "model": "gpt-4o-transcribe",
                             "language": "fr",
                         },
-                    },
-                    "output": {
-                        "voice": settings.OPENAI_VOICE,
-                    },
+                    }
                 },
             },
         }
 
-        try:
-            print("Envoi session.update")
-            await self.openai_ws.send(json.dumps(session_update))
-            print("session.update envoyé OK")
-        except Exception as e:
-            print("Erreur envoi session.update:", repr(e))
-            raise
+        print("Envoi session.update")
+        await self.openai_ws.send(json.dumps(session_update))
+        print("session.update envoyé OK")
 
-        try:
-            print("Envoi response.create")
-            await self.openai_ws.send(json.dumps({
-                "type": "response.create",
-                "response": {
-                    "modalities": ["audio", "text"],
-                    "instructions": (
-                        "Commence immédiatement l'appel en français. "
-                        "Dis bonjour, présente-toi brièvement comme la démonstration de Décroche.ai, "
-                        "puis continue naturellement avec une phrase courte."
-                    ),
-                },
-            }))
-            print("response.create envoyé OK")
-        except Exception as e:
-            print("Erreur envoi response.create:", repr(e))
-            raise
+        print("Envoi response.create")
+        await self.openai_ws.send(json.dumps({
+            "type": "response.create",
+            "response": {
+                "modalities": ["audio"],
+                "instructions": (
+                    "Commence immédiatement l'appel en français. "
+                    "Dis bonjour, présente-toi brièvement comme la démonstration de Décroche.ai, "
+                    "puis pose une question courte."
+                ),
+            },
+        }))
+        print("response.create envoyé OK")
 
     async def openai_to_twilio_loop(self):
         print("=== openai_to_twilio_loop démarré ===")
@@ -283,9 +276,11 @@ class TwilioStreamConsumer(AsyncWebsocketConsumer):
                     continue
 
                 if event_type == "response.output_audio.delta":
+                    print("AUDIO DELTA RECU")
                     delta = evt.get("delta")
                     if not delta:
                         continue
+
 
                     buffer += b64_to_bytes(delta)
 
