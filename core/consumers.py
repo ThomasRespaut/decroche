@@ -45,6 +45,9 @@ class TwilioStreamConsumer(AsyncWebsocketConsumer):
             "target_number": "",
         }
 
+        # Test simple : renvoyer quelques frames audio Twilio vers Twilio
+        self.echo_test_frames_left = 0
+
     async def disconnect(self, close_code):
         print(f"=== WS DISCONNECT code={close_code} ===")
 
@@ -83,6 +86,8 @@ class TwilioStreamConsumer(AsyncWebsocketConsumer):
                 if not self.stream_sid:
                     print("send_to_twilio_loop: pas de stream_sid")
                     continue
+
+                print("<<< ENVOI AUDIO VERS TWILIO")
 
                 await self.send(text_data=json.dumps({
                     "event": "media",
@@ -139,6 +144,10 @@ class TwilioStreamConsumer(AsyncWebsocketConsumer):
             print("call_sid =", self.call_sid)
             print("call_context =", self.call_context)
 
+            # ~500 ms d'écho test
+            self.echo_test_frames_left = 25
+            print("=== ECHO TEST ARME ===")
+
             self.sender_task = asyncio.create_task(self.send_to_twilio_loop())
 
             try:
@@ -153,7 +162,17 @@ class TwilioStreamConsumer(AsyncWebsocketConsumer):
             payload = data.get("media", {}).get("payload")
             print("media event reçu, payload présent =", bool(payload))
 
-            if payload and self.openai_ws:
+            if not payload:
+                return
+
+            # Test Twilio -> Twilio
+            if self.echo_test_frames_left > 0:
+                self.echo_test_frames_left -= 1
+                print(">>> ECHO TEST frame envoyée à Twilio, restantes =", self.echo_test_frames_left)
+                await self.out_q.put(payload)
+
+            # Envoi du flux entrant vers OpenAI
+            if self.openai_ws:
                 try:
                     await self.openai_ws.send(json.dumps({
                         "type": "input_audio_buffer.append",
@@ -233,7 +252,7 @@ class TwilioStreamConsumer(AsyncWebsocketConsumer):
                             "model": "gpt-4o-transcribe",
                             "language": "fr",
                         },
-                    }
+                    },
                 },
             },
         }
@@ -281,12 +300,12 @@ class TwilioStreamConsumer(AsyncWebsocketConsumer):
                     if not delta:
                         continue
 
-
                     buffer += b64_to_bytes(delta)
 
                     while len(buffer) >= TWILIO_FRAME_BYTES:
                         chunk = buffer[:TWILIO_FRAME_BYTES]
                         buffer = buffer[TWILIO_FRAME_BYTES:]
+                        print(">>> CHUNK OPENAI MIS EN FILE POUR TWILIO")
                         await self.out_q.put(bytes_to_b64(chunk))
                     continue
 
