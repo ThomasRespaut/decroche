@@ -9,12 +9,7 @@ from django.conf import settings
 
 
 TWILIO_FRAME_MS = 20
-TWILIO_SAMPLE_RATE = 8000
-TWILIO_CHANNELS = 1
-TWILIO_ENCODING = "g711_ulaw"
-
-# 20 ms à 8 kHz en G.711 µ-law = 160 octets
-TWILIO_FRAME_BYTES = 160
+TWILIO_FRAME_BYTES = 160  # 20 ms en G711 µ-law 8kHz mono
 
 
 def b64_to_bytes(data: str) -> bytes:
@@ -50,11 +45,17 @@ class TwilioStreamConsumer(AsyncWebsocketConsumer):
             "target_number": "",
         }
 
-        self.assistant_item_id = None
-        self.response_text_buffer = ""
+        self.closed = False
+        self.initial_greeting_done = False
+        self.vad_enabled = False
+        self.forward_audio_to_openai = False
+
+        # petit test Twilio -> Twilio au début
+        self.echo_test_frames_left = 12
 
     async def disconnect(self, close_code):
         print(f"=== WS DISCONNECT code={close_code} ===")
+        self.closed = True
 
         try:
             if self.sender_task and not self.sender_task.done():
@@ -79,6 +80,15 @@ class TwilioStreamConsumer(AsyncWebsocketConsumer):
         except Exception:
             pass
 
+    async def safe_close(self):
+        if self.closed:
+            return
+        self.closed = True
+        try:
+            await self.close()
+        except Exception as e:
+            print("safe_close error:", repr(e))
+
     async def send_to_twilio_loop(self):
         print("=== send_to_twilio_loop démarré ===")
         try:
@@ -97,9 +107,7 @@ class TwilioStreamConsumer(AsyncWebsocketConsumer):
                 await self.send(text_data=json.dumps({
                     "event": "media",
                     "streamSid": self.stream_sid,
-                    "media": {
-                        "payload": frame_b64,
-                    },
+                    "media": {"payload": frame_b64},
                 }))
 
                 await asyncio.sleep(TWILIO_FRAME_MS / 1000.0)
@@ -136,7 +144,6 @@ class TwilioStreamConsumer(AsyncWebsocketConsumer):
 
             self.stream_sid = start_data.get("streamSid")
             self.call_sid = start_data.get("callSid")
-
             self.call_context["custom_prompt"] = params.get("custom_prompt", "")
             self.call_context["prospect_name"] = params.get("prospect_name", "")
             self.call_context["target_number"] = params.get("target_number", "")
@@ -153,10 +160,7 @@ class TwilioStreamConsumer(AsyncWebsocketConsumer):
                 await self.connect_openai_and_bootstrap()
             except Exception as e:
                 print("Erreur bootstrap OpenAI:", repr(e))
-                try:
-                    await self.close()
-                except Exception as e2:
-                    print("close after bootstrap error:", repr(e2))
+                await self.safe_close()
 
             return
 
@@ -165,6 +169,17 @@ class TwilioStreamConsumer(AsyncWebsocketConsumer):
             print("media event reçu, payload présent =", bool(payload))
 
             if not payload:
+                return
+
+            # test immédiat Twilio -> Twilio
+            if self.echo_test_frames_left > 0:
+                self.echo_test_frames_left -= 1
+                print(">>> ECHO TEST frame envoyée à Twilio, restantes =", self.echo_test_frames_left)
+                await self.out_q.put(payload)
+
+            # tant que le greeting n'est pas fini, on n'envoie pas l'audio vers OpenAI
+            if not self.forward_audio_to_openai:
+                print("audio Twilio ignoré temporairement pendant greeting initial")
                 return
 
             if self.openai_ws:
@@ -217,6 +232,29 @@ class TwilioStreamConsumer(AsyncWebsocketConsumer):
 
             print("Event sync ignoré pendant attente =", evt_type)
 
+    async def enable_vad_after_greeting(self):
+        if self.vad_enabled:
+            return
+
+        print("=== ACTIVATION DU VAD APRES GREETING ===")
+        session_update = {
+            "type": "session.update",
+            "session": {
+                "turn_detection": {
+                    "type": "server_vad",
+                    "threshold": 0.5,
+                    "prefix_padding_ms": 300,
+                    "silence_duration_ms": 500,
+                    "create_response": True,
+                    "interrupt_response": True,
+                }
+            },
+        }
+
+        await self.openai_ws.send(json.dumps(session_update))
+        self.vad_enabled = True
+        self.forward_audio_to_openai = True
+
     async def connect_openai_and_bootstrap(self):
         print("=== connect_openai_and_bootstrap appelé ===")
         url = f"wss://api.openai.com/v1/realtime?model={settings.OPENAI_REALTIME_MODEL}"
@@ -248,32 +286,14 @@ class TwilioStreamConsumer(AsyncWebsocketConsumer):
             "type": "session.update",
             "session": {
                 "instructions": prompt,
-                "modalities": ["audio", "text"],
-                "audio": {
-                    "input": {
-                        "format": {
-                            "type": "audio/pcmu",
-                        },
-                        "turn_detection": {
-                            "type": "server_vad",
-                            "threshold": 0.5,
-                            "prefix_padding_ms": 300,
-                            "silence_duration_ms": 500,
-                            "create_response": True,
-                            "interrupt_response": True,
-                        },
-                        "transcription": {
-                            "model": "gpt-4o-transcribe",
-                            "language": "fr",
-                        },
-                    },
-                    "output": {
-                        "format": {
-                            "type": "audio/pcmu",
-                        },
-                        "voice": settings.OPENAI_VOICE,
-                    },
+                "voice": settings.OPENAI_VOICE,
+                "input_audio_format": "g711_ulaw",
+                "output_audio_format": "g711_ulaw",
+                "input_audio_transcription": {
+                    "model": "gpt-4o-transcribe",
+                    "language": "fr",
                 },
+                "turn_detection": None,
             },
         }
 
@@ -287,6 +307,10 @@ class TwilioStreamConsumer(AsyncWebsocketConsumer):
         )
         print("SESSION UPDATED EVENT =", session_updated_evt)
 
+        self.openai_task = asyncio.create_task(self.openai_to_twilio_loop())
+        await asyncio.sleep(0)
+
+        # on crée explicitement un item utilisateur
         item_evt = {
             "type": "conversation.item.create",
             "item": {
@@ -296,8 +320,9 @@ class TwilioStreamConsumer(AsyncWebsocketConsumer):
                     {
                         "type": "input_text",
                         "text": (
-                            "Lance l'appel maintenant. "
-                            "Dis bonjour en français, présente-toi brièvement comme Décroche.ai, "
+                            "Commence immédiatement l'appel. "
+                            "Dis bonjour, présente-toi brièvement comme Décroche.ai, "
+                            "explique que c'est une démonstration, "
                             "puis pose une question courte."
                         ),
                     }
@@ -309,22 +334,16 @@ class TwilioStreamConsumer(AsyncWebsocketConsumer):
         await self.openai_ws.send(json.dumps(item_evt))
         print("conversation.item.create envoyé OK")
 
-        item_created_evt = await self.wait_for_openai_event(
-            accepted_types={"conversation.item.created"},
-            timeout=8,
-        )
-        print("ITEM CREATED EVENT =", item_created_evt)
-
-        print("Envoi response.create")
-        await self.openai_ws.send(json.dumps({
+        first_response = {
             "type": "response.create",
             "response": {
-                "modalities": ["audio", "text"],
+                "modalities": ["audio"],
             },
-        }))
-        print("response.create envoyé OK")
+        }
 
-        self.openai_task = asyncio.create_task(self.openai_to_twilio_loop())
+        print("Envoi response.create (greeting initial)")
+        await self.openai_ws.send(json.dumps(first_response))
+        print("response.create envoyé OK")
 
     async def openai_to_twilio_loop(self):
         print("=== openai_to_twilio_loop démarré ===")
@@ -342,16 +361,17 @@ class TwilioStreamConsumer(AsyncWebsocketConsumer):
                     print("SESSION UPDATED OK:", evt)
                     continue
 
+                if event_type == "conversation.item.created":
+                    print("CONVERSATION ITEM CREATED:", evt)
+                    continue
+
                 if event_type == "response.created":
                     print("RESPONSE CREATED:", evt)
                     text_buffer = ""
                     continue
 
                 if event_type == "response.output_item.added":
-                    item = evt.get("item", {}) or {}
-                    if item.get("role") == "assistant":
-                        self.assistant_item_id = item.get("id")
-                        print("ASSISTANT ITEM ID =", self.assistant_item_id)
+                    print("OUTPUT ITEM ADDED:", evt)
                     continue
 
                 if event_type == "response.output_text.delta":
@@ -367,35 +387,17 @@ class TwilioStreamConsumer(AsyncWebsocketConsumer):
                     text_buffer = ""
                     continue
 
-                if event_type == "conversation.item.input_audio_transcription.completed":
-                    print("USER:", evt.get("transcript"))
-                    continue
-
-                if event_type == "input_audio_buffer.speech_started":
-                    print("USER SPEECH STARTED")
-                    continue
-
-                if event_type == "input_audio_buffer.speech_stopped":
-                    print("USER SPEECH STOPPED")
-                    continue
-
                 if event_type == "response.output_audio.delta":
                     delta_b64 = evt.get("delta")
                     if not delta_b64:
                         continue
 
                     print("AUDIO DELTA RECU")
-
-                    try:
-                        audio_buffer += b64_to_bytes(delta_b64)
-                    except Exception as e:
-                        print("Erreur décodage delta audio:", repr(e))
-                        continue
+                    audio_buffer += b64_to_bytes(delta_b64)
 
                     while len(audio_buffer) >= TWILIO_FRAME_BYTES:
                         frame = audio_buffer[:TWILIO_FRAME_BYTES]
                         audio_buffer = audio_buffer[TWILIO_FRAME_BYTES:]
-
                         print(">>> FRAME OPENAI MISE EN FILE POUR TWILIO")
                         await self.out_q.put(bytes_to_b64(frame))
 
@@ -413,6 +415,23 @@ class TwilioStreamConsumer(AsyncWebsocketConsumer):
 
                 if event_type == "response.done":
                     print("RESPONSE DONE:", evt)
+
+                    if not self.initial_greeting_done:
+                        self.initial_greeting_done = True
+                        await self.enable_vad_after_greeting()
+
+                    continue
+
+                if event_type == "conversation.item.input_audio_transcription.completed":
+                    print("USER:", evt.get("transcript"))
+                    continue
+
+                if event_type == "input_audio_buffer.speech_started":
+                    print("USER SPEECH STARTED")
+                    continue
+
+                if event_type == "input_audio_buffer.speech_stopped":
+                    print("USER SPEECH STOPPED")
                     continue
 
                 if event_type == "error":
@@ -425,7 +444,4 @@ class TwilioStreamConsumer(AsyncWebsocketConsumer):
             print("openai_to_twilio_loop cancelled")
         except Exception as e:
             print("openai_to_twilio_loop error:", repr(e))
-            try:
-                await self.close()
-            except Exception as e2:
-                print("close error:", repr(e2))
+            await self.safe_close()
