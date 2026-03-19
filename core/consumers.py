@@ -45,7 +45,7 @@ class TwilioStreamConsumer(AsyncWebsocketConsumer):
             "target_number": "",
         }
 
-        # Test simple : renvoyer quelques frames audio Twilio vers Twilio
+        # Petit test d'écho Twilio -> Twilio
         self.echo_test_frames_left = 0
 
     async def disconnect(self, close_code):
@@ -144,9 +144,9 @@ class TwilioStreamConsumer(AsyncWebsocketConsumer):
             print("call_sid =", self.call_sid)
             print("call_context =", self.call_context)
 
-            # ~500 ms d'écho test
             self.echo_test_frames_left = 25
             print("=== ECHO TEST ARME ===")
+            print("echo_test_frames_left =", self.echo_test_frames_left)
 
             self.sender_task = asyncio.create_task(self.send_to_twilio_loop())
 
@@ -161,17 +161,18 @@ class TwilioStreamConsumer(AsyncWebsocketConsumer):
         if event == "media":
             payload = data.get("media", {}).get("payload")
             print("media event reçu, payload présent =", bool(payload))
+            print("echo_test_frames_left avant test =", self.echo_test_frames_left)
 
             if not payload:
                 return
 
-            # Test Twilio -> Twilio
+            # Echo test Twilio -> Twilio
             if self.echo_test_frames_left > 0:
                 self.echo_test_frames_left -= 1
                 print(">>> ECHO TEST frame envoyée à Twilio, restantes =", self.echo_test_frames_left)
                 await self.out_q.put(payload)
 
-            # Envoi du flux entrant vers OpenAI
+            # Audio entrant vers OpenAI
             if self.openai_ws:
                 try:
                     await self.openai_ws.send(json.dumps({
@@ -209,6 +210,7 @@ class TwilioStreamConsumer(AsyncWebsocketConsumer):
                 url,
                 additional_headers=[
                     ("Authorization", f"Bearer {settings.OPENAI_API_KEY}"),
+                    ("OpenAI-Beta", "realtime=v1"),
                 ],
                 ping_interval=20,
                 ping_timeout=20,
@@ -219,9 +221,10 @@ class TwilioStreamConsumer(AsyncWebsocketConsumer):
             print("connect_openai error:", repr(e))
             raise
 
+        self.openai_task = asyncio.create_task(self.openai_to_twilio_loop())
+
         try:
             await self.init_openai_session()
-            self.openai_task = asyncio.create_task(self.openai_to_twilio_loop())
         except Exception as e:
             print("Erreur après connexion OpenAI:", repr(e))
             raise
@@ -246,7 +249,7 @@ class TwilioStreamConsumer(AsyncWebsocketConsumer):
                     "input": {
                         "turn_detection": {
                             "type": "server_vad",
-                            "create_response": True,
+                            "create_response": False,
                         },
                         "transcription": {
                             "model": "gpt-4o-transcribe",
@@ -261,16 +264,31 @@ class TwilioStreamConsumer(AsyncWebsocketConsumer):
         await self.openai_ws.send(json.dumps(session_update))
         print("session.update envoyé OK")
 
+        print("Envoi conversation.item.create")
+        await self.openai_ws.send(json.dumps({
+            "type": "conversation.item.create",
+            "item": {
+                "type": "message",
+                "role": "user",
+                "content": [
+                    {
+                        "type": "input_text",
+                        "text": (
+                            "Lance l'appel maintenant. "
+                            "Dis bonjour en français, présente-toi brièvement comme Décroche.ai, "
+                            "puis pose une question courte."
+                        ),
+                    }
+                ],
+            },
+        }))
+        print("conversation.item.create envoyé OK")
+
         print("Envoi response.create")
         await self.openai_ws.send(json.dumps({
             "type": "response.create",
             "response": {
                 "modalities": ["audio"],
-                "instructions": (
-                    "Commence immédiatement l'appel en français. "
-                    "Dis bonjour, présente-toi brièvement comme la démonstration de Décroche.ai, "
-                    "puis pose une question courte."
-                ),
             },
         }))
         print("response.create envoyé OK")
@@ -290,6 +308,14 @@ class TwilioStreamConsumer(AsyncWebsocketConsumer):
                     print("SESSION UPDATED:", evt)
                     continue
 
+                if event_type == "conversation.item.created":
+                    print("CONVERSATION ITEM CREATED:", evt)
+                    continue
+
+                if event_type == "conversation.item.done":
+                    print("CONVERSATION ITEM DONE:", evt)
+                    continue
+
                 if event_type == "response.created":
                     print("RESPONSE CREATED:", evt)
                     continue
@@ -307,6 +333,10 @@ class TwilioStreamConsumer(AsyncWebsocketConsumer):
                         buffer = buffer[TWILIO_FRAME_BYTES:]
                         print(">>> CHUNK OPENAI MIS EN FILE POUR TWILIO")
                         await self.out_q.put(bytes_to_b64(chunk))
+                    continue
+
+                if event_type == "response.output_audio.done":
+                    print("AUDIO DONE:", evt)
                     continue
 
                 if event_type == "response.output_text.done":
