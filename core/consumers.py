@@ -8,7 +8,6 @@ from channels.generic.websocket import AsyncWebsocketConsumer
 from django.conf import settings
 
 
-TWILIO_FRAME_BYTES = 160
 TWILIO_FRAME_MS = 20
 
 
@@ -33,7 +32,6 @@ class TwilioStreamConsumer(AsyncWebsocketConsumer):
         self.stream_sid = None
         self.call_sid = None
         self.openai_ws = None
-
         self.out_q = asyncio.Queue(maxsize=2000)
         self.sender_task = None
         self.openai_task = None
@@ -45,7 +43,6 @@ class TwilioStreamConsumer(AsyncWebsocketConsumer):
             "target_number": "",
         }
 
-        # Petit test d'écho Twilio -> Twilio
         self.echo_test_frames_left = 0
 
     async def disconnect(self, close_code):
@@ -84,11 +81,9 @@ class TwilioStreamConsumer(AsyncWebsocketConsumer):
                     return
 
                 if not self.stream_sid:
-                    print("send_to_twilio_loop: pas de stream_sid")
                     continue
 
                 print("<<< ENVOI AUDIO VERS TWILIO")
-
                 await self.send(text_data=json.dumps({
                     "event": "media",
                     "streamSid": self.stream_sid,
@@ -103,12 +98,8 @@ class TwilioStreamConsumer(AsyncWebsocketConsumer):
             print("send_to_twilio_loop error:", repr(e))
 
     async def receive(self, text_data=None, bytes_data=None):
-        print("=== WS RECEIVE appelé ===")
-
-        if bytes_data:
-            print("bytes_data reçu")
-
         if text_data:
+            print("=== WS RECEIVE appelé ===")
             print("text_data =", text_data[:700])
 
         if not text_data:
@@ -133,7 +124,6 @@ class TwilioStreamConsumer(AsyncWebsocketConsumer):
 
             self.stream_sid = start_data.get("streamSid")
             self.call_sid = start_data.get("callSid")
-
             self.call_context["custom_prompt"] = params.get("custom_prompt", "")
             self.call_context["prospect_name"] = params.get("prospect_name", "")
             self.call_context["target_number"] = params.get("target_number", "")
@@ -151,9 +141,9 @@ class TwilioStreamConsumer(AsyncWebsocketConsumer):
             self.sender_task = asyncio.create_task(self.send_to_twilio_loop())
 
             try:
-                await self.connect_openai()
+                await self.connect_openai_and_bootstrap()
             except Exception as e:
-                print("Erreur globale connect_openai:", repr(e))
+                print("Erreur bootstrap OpenAI:", repr(e))
                 await self.close()
 
             return
@@ -166,7 +156,7 @@ class TwilioStreamConsumer(AsyncWebsocketConsumer):
             if not payload:
                 return
 
-            # Echo test Twilio -> Twilio
+            # Test Twilio -> Twilio
             if self.echo_test_frames_left > 0:
                 self.echo_test_frames_left -= 1
                 print(">>> ECHO TEST frame envoyée à Twilio, restantes =", self.echo_test_frames_left)
@@ -185,7 +175,6 @@ class TwilioStreamConsumer(AsyncWebsocketConsumer):
 
         if event == "stop":
             print("=== STOP EVENT ===")
-
             try:
                 await self.out_q.put(None)
             except Exception as e:
@@ -200,38 +189,34 @@ class TwilioStreamConsumer(AsyncWebsocketConsumer):
 
         print("Event non géré =", event)
 
-    async def connect_openai(self):
-        print("=== connect_openai appelé ===")
+    async def recv_openai_event(self, timeout=5):
+        raw = await asyncio.wait_for(self.openai_ws.recv(), timeout=timeout)
+        evt = json.loads(raw)
+        print("OpenAI event reçu sync =", evt.get("type"))
+        return evt
+
+    async def connect_openai_and_bootstrap(self):
+        print("=== connect_openai_and_bootstrap appelé ===")
         url = f"wss://api.openai.com/v1/realtime?model={settings.OPENAI_REALTIME_MODEL}"
         print("OpenAI URL =", url)
 
-        try:
-            self.openai_ws = await websockets.connect(
-                url,
-                additional_headers=[
-                    ("Authorization", f"Bearer {settings.OPENAI_API_KEY}"),
-                    ("OpenAI-Beta", "realtime=v1"),
-                ],
-                ping_interval=20,
-                ping_timeout=20,
-                max_size=2**22,
-            )
-            print("=== OpenAI websocket connecté ===")
-        except Exception as e:
-            print("connect_openai error:", repr(e))
-            raise
+        self.openai_ws = await websockets.connect(
+            url,
+            additional_headers=[
+                ("Authorization", f"Bearer {settings.OPENAI_API_KEY}"),
+                ("OpenAI-Beta", "realtime=v1"),
+            ],
+            ping_interval=20,
+            ping_timeout=20,
+            max_size=2**22,
+        )
+        print("=== OpenAI websocket connecté ===")
 
-        self.openai_task = asyncio.create_task(self.openai_to_twilio_loop())
+        # 1) Premier événement attendu à l'ouverture
+        first_evt = await self.recv_openai_event(timeout=5)
+        print("FIRST OPENAI EVENT =", first_evt)
 
-        try:
-            await self.init_openai_session()
-        except Exception as e:
-            print("Erreur après connexion OpenAI:", repr(e))
-            raise
-
-    async def init_openai_session(self):
-        print("=== init_openai_session ===")
-
+        # 2) Mise à jour session avec schéma audio officiel
         prompt = self.call_context.get("custom_prompt") or (
             "Tu es l'agent téléphonique IA de démonstration de Décroche.ai. "
             "Tu parles uniquement en français. "
@@ -242,19 +227,22 @@ class TwilioStreamConsumer(AsyncWebsocketConsumer):
             "type": "session.update",
             "session": {
                 "instructions": prompt,
-                "voice": settings.OPENAI_VOICE,
-                "input_audio_format": "g711_ulaw",
-                "output_audio_format": "g711_ulaw",
+                "modalities": ["audio"],
                 "audio": {
                     "input": {
-                        "turn_detection": {
-                            "type": "server_vad",
-                            "create_response": False,
-                        },
+                        "format": "g711_ulaw",
                         "transcription": {
                             "model": "gpt-4o-transcribe",
                             "language": "fr",
                         },
+                        "turn_detection": {
+                            "type": "server_vad",
+                            "create_response": False,
+                        },
+                    },
+                    "output": {
+                        "format": "g711_ulaw",
+                        "voice": settings.OPENAI_VOICE,
                     },
                 },
             },
@@ -264,8 +252,11 @@ class TwilioStreamConsumer(AsyncWebsocketConsumer):
         await self.openai_ws.send(json.dumps(session_update))
         print("session.update envoyé OK")
 
-        print("Envoi conversation.item.create")
-        await self.openai_ws.send(json.dumps({
+        session_updated_evt = await self.recv_openai_event(timeout=5)
+        print("SESSION UPDATED EVENT =", session_updated_evt)
+
+        # 3) Message utilisateur explicite
+        item_evt = {
             "type": "conversation.item.create",
             "item": {
                 "type": "message",
@@ -281,9 +272,16 @@ class TwilioStreamConsumer(AsyncWebsocketConsumer):
                     }
                 ],
             },
-        }))
+        }
+
+        print("Envoi conversation.item.create")
+        await self.openai_ws.send(json.dumps(item_evt))
         print("conversation.item.create envoyé OK")
 
+        item_created_evt = await self.recv_openai_event(timeout=5)
+        print("ITEM CREATED EVENT =", item_created_evt)
+
+        # 4) Demande de réponse audio
         print("Envoi response.create")
         await self.openai_ws.send(json.dumps({
             "type": "response.create",
@@ -292,6 +290,9 @@ class TwilioStreamConsumer(AsyncWebsocketConsumer):
             },
         }))
         print("response.create envoyé OK")
+
+        # Ensuite seulement on bascule en écoute continue
+        self.openai_task = asyncio.create_task(self.openai_to_twilio_loop())
 
     async def openai_to_twilio_loop(self):
         print("=== openai_to_twilio_loop démarré ===")
@@ -304,18 +305,6 @@ class TwilioStreamConsumer(AsyncWebsocketConsumer):
                 event_type = evt.get("type")
                 print("OpenAI event =", event_type)
 
-                if event_type == "session.updated":
-                    print("SESSION UPDATED:", evt)
-                    continue
-
-                if event_type == "conversation.item.created":
-                    print("CONVERSATION ITEM CREATED:", evt)
-                    continue
-
-                if event_type == "conversation.item.done":
-                    print("CONVERSATION ITEM DONE:", evt)
-                    continue
-
                 if event_type == "response.created":
                     print("RESPONSE CREATED:", evt)
                     continue
@@ -326,13 +315,9 @@ class TwilioStreamConsumer(AsyncWebsocketConsumer):
                     if not delta:
                         continue
 
-                    buffer += b64_to_bytes(delta)
-
-                    while len(buffer) >= TWILIO_FRAME_BYTES:
-                        chunk = buffer[:TWILIO_FRAME_BYTES]
-                        buffer = buffer[TWILIO_FRAME_BYTES:]
-                        print(">>> CHUNK OPENAI MIS EN FILE POUR TWILIO")
-                        await self.out_q.put(bytes_to_b64(chunk))
+                    # Pour g711_ulaw, on peut renvoyer directement le delta base64 à Twilio
+                    print(">>> CHUNK OPENAI MIS EN FILE POUR TWILIO")
+                    await self.out_q.put(delta)
                     continue
 
                 if event_type == "response.output_audio.done":
@@ -354,6 +339,8 @@ class TwilioStreamConsumer(AsyncWebsocketConsumer):
                 if event_type == "response.done":
                     print("RESPONSE DONE:", evt)
                     continue
+
+                print("OpenAI event non géré =", evt)
 
         except asyncio.CancelledError:
             print("openai_to_twilio_loop cancelled")
