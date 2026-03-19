@@ -310,41 +310,34 @@ class TwilioStreamConsumer(AsyncWebsocketConsumer):
         self.openai_task = asyncio.create_task(self.openai_to_twilio_loop())
         await asyncio.sleep(0)
 
-        # on crée explicitement un item utilisateur
-        item_evt = {
-            "type": "conversation.item.create",
-            "item": {
-                "type": "message",
-                "role": "user",
-                "content": [
+        # IMPORTANT : on déclenche directement la réponse avec input embarqué
+        first_response = {
+            "type": "response.create",
+            "response": {
+                "modalities": ["audio"],
+                "input": [
                     {
-                        "type": "input_text",
-                        "text": (
-                            "Commence immédiatement l'appel. "
-                            "Dis bonjour, présente-toi brièvement comme Décroche.ai, "
-                            "explique que c'est une démonstration, "
-                            "puis pose une question courte."
-                        ),
+                        "type": "message",
+                        "role": "user",
+                        "content": [
+                            {
+                                "type": "input_text",
+                                "text": (
+                                    "Commence immédiatement l'appel. "
+                                    "Dis bonjour, présente-toi brièvement comme Décroche.ai, "
+                                    "explique que c'est une démonstration, "
+                                    "puis pose une question courte."
+                                ),
+                            }
+                        ],
                     }
                 ],
             },
         }
 
-        print("Envoi conversation.item.create")
-        await self.openai_ws.send(json.dumps(item_evt))
-        print("conversation.item.create envoyé OK")
-
-        first_response = {
-            "type": "response.create",
-            "response": {
-                "modalities": ["audio"],
-            },
-        }
-
-        print("Envoi response.create (greeting initial)")
+        print("Envoi response.create (greeting initial avec input)")
         await self.openai_ws.send(json.dumps(first_response))
         print("response.create envoyé OK")
-
     async def openai_to_twilio_loop(self):
         print("=== openai_to_twilio_loop démarré ===")
         audio_buffer = b""
