@@ -9,13 +9,25 @@ load_dotenv(BASE_DIR / ".env")
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "django-insecure-change-me-in-production")
 DEBUG = os.getenv("DEBUG", "True").lower() == "true"
 
+# -----------------------------
+# Hosts localhost
+# -----------------------------
 ALLOWED_HOSTS = [
     host.strip()
     for host in os.getenv(
         "ALLOWED_HOSTS",
-        "127.0.0.1,localhost,thomasrespaut.fr,www.thomasrespaut.fr"
+        "127.0.0.1,localhost,0.0.0.0"
     ).split(",")
     if host.strip()
+]
+
+CSRF_TRUSTED_ORIGINS = [
+    origin.strip()
+    for origin in os.getenv(
+        "CSRF_TRUSTED_ORIGINS",
+        "http://127.0.0.1:8000,http://localhost:8000"
+    ).split(",")
+    if origin.strip()
 ]
 
 INSTALLED_APPS = [
@@ -91,31 +103,51 @@ TIME_ZONE = "Europe/Paris"
 USE_I18N = True
 USE_TZ = True
 
+# -----------------------------
+# Static / Media
+# -----------------------------
 STATIC_URL = "/static/"
 STATICFILES_DIRS = [
     BASE_DIR / "static",
 ]
 STATIC_ROOT = BASE_DIR / "staticfiles"
-STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+
+# En local, éviter ManifestStaticFilesStorage qui peut casser si collectstatic n'a pas été lancé
+if DEBUG:
+    STATICFILES_STORAGE = "django.contrib.staticfiles.storage.StaticFilesStorage"
+else:
+    STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
+# -----------------------------
+# Channels
+# -----------------------------
 CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels.layers.InMemoryChannelLayer",
     },
 }
 
+# -----------------------------
+# OpenAI
+# -----------------------------
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
 OPENAI_REALTIME_MODEL = os.getenv("OPENAI_REALTIME_MODEL", "gpt-realtime")
 OPENAI_VOICE = os.getenv("OPENAI_VOICE", "marin")
 
+# -----------------------------
+# Twilio
+# -----------------------------
 TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID", "")
 TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN", "")
 TWILIO_TEST_CALLER_NUMBER = os.getenv("TWILIO_TEST_CALLER_NUMBER", "")
 
-PUBLIC_BASE_URL = os.getenv("PUBLIC_BASE_URL", "").rstrip("/")
-PUBLIC_WSS_BASE_URL = os.getenv("PUBLIC_WSS_BASE_URL", "").rstrip("/")
+# -----------------------------
+# URLs publiques locales
+# -----------------------------
+PUBLIC_BASE_URL = os.getenv("PUBLIC_BASE_URL", "http://127.0.0.1:8000").rstrip("/")
+PUBLIC_WSS_BASE_URL = os.getenv("PUBLIC_WSS_BASE_URL", "ws://127.0.0.1:8000").rstrip("/")
