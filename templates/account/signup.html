@@ -1,0 +1,63 @@
+{% extends "account/base_manage.html" %}
+{% load i18n %}
+{% load socialaccount %}
+
+{% block title %}Créer un compte · Décroche.ai{% endblock %}
+
+{% block account_content %}
+<span class="auth-eyebrow">Inscription</span>
+<h1 class="auth-title">Créez votre espace Décroche.ai</h1>
+<p class="auth-subtitle">
+    Lancez votre répondeur IA, centralisez vos appels et connectez vos outils.
+</p>
+
+{% if form.errors %}
+    <div class="auth-errors">
+        Certaines informations doivent être corrigées.
+    </div>
+{% endif %}
+
+<form method="post" action="{% url 'account_signup' %}" class="auth-form">
+    {% csrf_token %}
+
+    {% for field in form %}
+        {% if field.name != redirect_field_name %}
+            <div class="form-group">
+                <label for="{{ field.id_for_label }}">
+                    {{ field.label }}
+                </label>
+                {{ field }}
+                {% if field.help_text %}
+                    <div class="form-help">{{ field.help_text|safe }}</div>
+                {% endif %}
+                {% if field.errors %}{{ field.errors }}{% endif %}
+            </div>
+        {% endif %}
+    {% endfor %}
+
+    {% if redirect_field_value %}
+        <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}">
+    {% endif %}
+
+    <div class="auth-actions">
+        <button type="submit" class="btn btn-nav btn-block">Créer mon compte</button>
+    </div>
+</form>
+
+<div class="auth-links">
+    <a href="{% url 'account_login' %}">Déjà un compte ? Se connecter</a>
+</div>
+
+<div class="auth-divider">
+    <span>ou</span>
+</div>
+
+<div class="auth-socials">
+    <a href="{% provider_login_url 'google' %}" class="btn-outline auth-social-btn">
+        Continuer avec Google
+    </a>
+    <a href="{% provider_login_url 'apple' %}" class="btn-outline auth-social-btn">
+        Continuer avec Apple
+    </a>
+</div>
+{% endblock %}

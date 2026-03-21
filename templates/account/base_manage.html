@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="auth-shell">
+    <div class="auth-card {% block auth_card_class %}{% endblock %}">
+        {% if messages %}
+            <div class="auth-messages">
+                {% for message in messages %}
+                    <div>{{ message }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        {% block account_content %}{% endblock %}
+    </div>
+</section>
+{% endblock %}

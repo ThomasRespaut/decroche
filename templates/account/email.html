@@ -1,0 +1,89 @@
+{% extends "account/base_manage.html" %}
+{% load i18n %}
+
+{% block title %}Emails · Décroche.ai{% endblock %}
+{% block auth_card_class %}auth-card--wide{% endblock %}
+
+{% block account_content %}
+<span class="auth-eyebrow">Compte</span>
+<h1 class="auth-title">Adresses email</h1>
+<p class="auth-subtitle">
+    Gérez l’adresse principale associée à votre compte.
+</p>
+
+{% if user.emailaddress_set.all %}
+    <div class="auth-info">
+        Sélectionnez l’adresse principale, vérifiez-la si besoin, ou supprimez une adresse secondaire.
+    </div>
+
+    <form method="post" action="{% url 'account_email' %}">
+        {% csrf_token %}
+
+        <table class="auth-table">
+            <thead>
+                <tr>
+                    <th>Email</th>
+                    <th>Statut</th>
+                    <th>Principal</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for emailaddress in user.emailaddress_set.all %}
+                    <tr>
+                        <td>{{ emailaddress.email }}</td>
+                        <td>
+                            {% if emailaddress.verified %}
+                                <span class="auth-badge">Vérifié</span>
+                            {% else %}
+                                <span class="auth-muted">Non vérifié</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <input type="radio" name="email" value="{{ emailaddress.email }}" {% if emailaddress.primary %}checked{% endif %}>
+                        </td>
+                        <td>
+                            <div class="auth-row-actions">
+                                {% if not emailaddress.verified %}
+                                    <button type="submit" name="action_send" value="{{ emailaddress.email }}" class="btn-outline">
+                                        Vérifier
+                                    </button>
+                                {% endif %}
+                                {% if not emailaddress.primary %}
+                                    <button type="submit" name="action_remove" value="{{ emailaddress.email }}" class="btn-outline">
+                                        Supprimer
+                                    </button>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <div class="auth-actions" style="margin-top: 18px;">
+            <button type="submit" name="action_primary" class="btn btn-nav">
+                Définir comme email principal
+            </button>
+        </div>
+    </form>
+{% endif %}
+
+<div class="auth-divider">
+    <span>Ajouter une adresse</span>
+</div>
+
+<form method="post" action="{% url 'account_email' %}" class="auth-form">
+    {% csrf_token %}
+
+    <div class="form-group">
+        <label for="{{ form.email.id_for_label }}">Nouvelle adresse email</label>
+        {{ form.email }}
+        {% if form.email.errors %}{{ form.email.errors }}{% endif %}
+    </div>
+
+    <div class="auth-actions">
+        <button type="submit" name="action_add" class="btn btn-nav">Ajouter cet email</button>
+    </div>
+</form>
+{% endblock %}

@@ -1,0 +1,20 @@
+{% extends "account/base_manage.html" %}
+{% load i18n %}
+
+{% block title %}Déconnexion · Décroche.ai{% endblock %}
+
+{% block account_content %}
+<span class="auth-eyebrow">Déconnexion</span>
+<h1 class="auth-title">Se déconnecter</h1>
+<p class="auth-subtitle">
+    Voulez-vous vraiment vous déconnecter de votre espace Décroche.ai ?
+</p>
+
+<form method="post" action="{% url 'account_logout' %}" class="auth-form">
+    {% csrf_token %}
+    <div class="auth-actions">
+        <button type="submit" class="btn btn-nav">Oui, me déconnecter</button>
+        <a href="/" class="btn-outline">Annuler</a>
+    </div>
+</form>
+{% endblock %}
