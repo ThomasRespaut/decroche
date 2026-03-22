@@ -1,0 +1,941 @@
+{% extends "base.html" %}
+
+{% block content %}
+{% include "dashboard/partials/_dashboard_styles.html" %}
+
+<style>
+    .test-agent-page {
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 32px 20px 48px;
+    }
+
+    .test-agent-topbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 16px;
+        flex-wrap: wrap;
+        margin-bottom: 24px;
+    }
+
+    .test-agent-topbar h1 {
+        margin: 0;
+        color: var(--text, #fff);
+        font-size: 2rem;
+    }
+
+    .test-agent-topbar p {
+        margin: 8px 0 0;
+        color: var(--muted, rgba(255,255,255,0.75));
+        line-height: 1.6;
+        max-width: 760px;
+    }
+
+    .btn-ui {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        vertical-align: middle;
+        gap: 8px;
+        padding: 12px 18px;
+        min-height: 48px;
+        border-radius: 14px;
+        border: 1px solid rgba(255,255,255,0.10);
+        text-decoration: none;
+        font-weight: 700;
+        cursor: pointer;
+        transition: 0.2s ease;
+        background: transparent;
+        box-sizing: border-box;
+        line-height: 1.2;
+    }
+
+    .btn-ui-primary {
+        color: #fff;
+        background: linear-gradient(135deg, #6a2fd8, #8b5cf6);
+        box-shadow: 0 10px 24px rgba(106, 47, 216, 0.28);
+    }
+
+    .btn-ui-primary:hover {
+        transform: translateY(-1px);
+    }
+
+    .btn-ui-secondary {
+        color: var(--text, #fff);
+        background: rgba(255,255,255,0.08);
+    }
+
+    .btn-ui-danger {
+        color: #fff;
+        background: linear-gradient(135deg, #ef4444, #dc2626);
+    }
+
+    .test-agent-layout {
+        display: grid;
+        grid-template-columns: 1.2fr 0.8fr;
+        gap: 22px;
+    }
+
+.test-col {
+    display: grid;
+    gap: 22px;
+    align-content: start;
+}
+
+.test-card {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 24px;
+    padding: 24px;
+    box-shadow: 0 18px 40px rgba(7, 10, 20, 0.18);
+    backdrop-filter: blur(10px);
+    height: fit-content;
+    align-self: start;
+}
+
+.test-agent-layout {
+    display: grid;
+    grid-template-columns: 1.2fr 0.8fr;
+    gap: 22px;
+    align-items: start;
+}
+    .test-card h2,
+    .test-card h3 {
+        margin: 0 0 8px;
+        color: var(--text, #fff);
+    }
+
+    .test-card p,
+    .test-card label,
+    .test-card li,
+    .test-card small {
+        color: var(--muted, rgba(255,255,255,0.75));
+        line-height: 1.6;
+    }
+
+    .messages-stack {
+        display: grid;
+        gap: 10px;
+        margin-bottom: 18px;
+    }
+
+    .message-alert {
+        padding: 12px 16px;
+        border-radius: 14px;
+        background: rgba(34, 197, 94, 0.14);
+        border: 1px solid rgba(34, 197, 94, 0.24);
+        color: #dcfce7;
+    }
+
+    .agent-summary {
+        display: grid;
+        gap: 12px;
+        margin-top: 16px;
+    }
+
+    .agent-summary-item {
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 14px 16px;
+        border-radius: 16px;
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .agent-summary-item strong {
+        color: #fff;
+    }
+
+    .preview-box {
+        margin-top: 16px;
+        padding: 18px;
+        border-radius: 18px;
+        background: rgba(9, 14, 29, 0.72);
+        border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .preview-label {
+        display: inline-block;
+        margin-bottom: 10px;
+        font-size: 0.82rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: #c4b5fd;
+        letter-spacing: 0.04em;
+    }
+
+    .preview-text {
+        color: #fff;
+        white-space: pre-line;
+        line-height: 1.7;
+    }
+
+    .test-textarea,
+    .test-select {
+        width: 100%;
+        border-radius: 16px;
+        border: 1px solid rgba(255,255,255,0.10);
+        background: rgba(9, 14, 29, 0.72);
+        color: #fff;
+        padding: 14px 16px;
+        font-size: 0.95rem;
+        resize: vertical;
+        box-sizing: border-box;
+    }
+
+    .form-row {
+        margin-bottom: 14px;
+    }
+
+    .button-row {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-top: 14px;
+    }
+
+    .button-row .btn-ui {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .scenario-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+        margin-top: 16px;
+    }
+
+    .scenario-grid form {
+        display: flex;
+        margin: 0;
+    }
+
+    .scenario-btn {
+        width: 100%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        min-height: 56px;
+        padding: 14px 16px;
+    }
+
+    .chat-history {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        max-height: 720px;
+        overflow-y: auto;
+        margin-top: 18px;
+        padding-right: 4px;
+    }
+
+    .chat-bubble {
+        padding: 16px 18px;
+        border-radius: 18px;
+        border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .chat-bubble--user {
+        background: rgba(255,255,255,0.04);
+    }
+
+    .chat-bubble--agent {
+        background: linear-gradient(135deg, rgba(106, 47, 216, 0.16), rgba(139, 92, 246, 0.08));
+    }
+
+    .chat-role {
+        display: block;
+        margin-bottom: 8px;
+        font-size: 0.82rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+    }
+
+    .chat-bubble--user .chat-role {
+        color: #cbd5e1;
+    }
+
+    .chat-bubble--agent .chat-role {
+        color: #c4b5fd;
+    }
+
+    .chat-text {
+        color: #fff;
+        line-height: 1.7;
+        white-space: pre-line;
+    }
+
+    .chat-feedback-trigger {
+        margin-top: 12px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .feedback-list {
+        display: grid;
+        gap: 12px;
+        margin-top: 14px;
+    }
+
+    .feedback-item {
+        padding: 14px 16px;
+        border-radius: 16px;
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .feedback-item strong {
+        display: block;
+        color: #fff;
+        margin-bottom: 6px;
+    }
+
+    .feedback-item .meta {
+        color: rgba(255,255,255,0.58);
+        font-size: 0.85rem;
+        margin-bottom: 8px;
+    }
+
+    .empty-box {
+        padding: 18px;
+        border-radius: 16px;
+        border: 1px dashed rgba(255,255,255,0.12);
+        background: rgba(255,255,255,0.03);
+        color: var(--muted, rgba(255,255,255,0.72));
+    }
+
+    .voice-status {
+        margin-top: 12px;
+        padding: 12px 14px;
+        border-radius: 14px;
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(255,255,255,0.08);
+        color: #fff;
+    }
+
+    @media (max-width: 980px) {
+        .test-agent-layout {
+            grid-template-columns: 1fr;
+        }
+
+        .scenario-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .button-row,
+        .chat-feedback-trigger {
+            justify-content: center;
+        }
+    }
+</style>
+    
+<div class="test-agent-page">
+    <div class="test-agent-topbar">
+        <div>
+            <h1>Tester mon agent</h1>
+            <p>
+                Simule des conversations, teste la qualité des réponses, essaye des scénarios
+                réels et enregistre des corrections pour améliorer durablement ton agent.
+            </p>
+        </div>
+
+        <a href="{% url 'dashboard' %}" class="btn-ui btn-ui-secondary">
+            ← Retour au dashboard
+        </a>
+    </div>
+
+    {% if messages %}
+        <div class="messages-stack">
+            {% for message in messages %}
+                <div class="message-alert">{{ message }}</div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <div class="test-agent-layout">
+        <div class="test-col">
+            <div class="test-card">
+                <h2>Aperçu rapide</h2>
+                <p>Vérifie immédiatement le style de ton agent et son message d’accueil.</p>
+
+                <div class="agent-summary">
+                    <div class="agent-summary-item">
+                        <strong>Nom</strong>
+                        <span>
+                            {% if agent_settings and agent_settings.ai_name %}
+                                {{ agent_settings.ai_name }}
+                            {% else %}
+                                Assistant IA
+                            {% endif %}
+                        </span>
+                    </div>
+
+                    <div class="agent-summary-item">
+                        <strong>Tonalité</strong>
+                        <span>
+                            {% if agent_settings and agent_settings.tone %}
+                                {{ agent_settings.get_tone_display|default:agent_settings.tone }}
+                            {% else %}
+                                Non définie
+                            {% endif %}
+                        </span>
+                    </div>
+
+                    <div class="agent-summary-item">
+                        <strong>Voix</strong>
+                        <span>
+                            {% if agent_settings and agent_settings.voice %}
+                                {{ agent_settings.get_voice_display|default:agent_settings.voice }}
+                            {% else %}
+                                Non définie
+                            {% endif %}
+                        </span>
+                    </div>
+
+                    <div class="agent-summary-item">
+                        <strong>Langue</strong>
+                        <span>
+                            {% if agent_settings and agent_settings.language %}
+                                {{ agent_settings.get_language_display|default:agent_settings.language }}
+                            {% else %}
+                                Non définie
+                            {% endif %}
+                        </span>
+                    </div>
+
+                    <div class="agent-summary-item">
+                        <strong>Sources documentaires</strong>
+                        <span>{{ knowledge_sources|length }}</span>
+                    </div>
+                </div>
+
+                <div class="preview-box">
+                    <span class="preview-label">Message d’accueil</span>
+                    <div class="preview-text" id="greeting-preview">
+                        {% if agent_settings and agent_settings.greeting_message %}
+                            {{ agent_settings.greeting_message }}
+                        {% else %}
+                            Bonjour, je suis votre assistant IA. Comment puis-je vous aider aujourd’hui ?
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="button-row">
+                    <button type="button" class="btn-ui btn-ui-primary" id="play-greeting-btn">
+                        ▶ Écouter le message
+                    </button>
+                    <button type="button" class="btn-ui btn-ui-secondary" id="copy-greeting-btn">
+                        ⧉ Copier le message
+                    </button>
+                </div>
+            </div>
+
+            <div class="test-card">
+                <h2>Scénarios rapides</h2>
+                <p>Lance des questions types sans avoir à tout retaper.</p>
+
+                <div class="scenario-grid">
+                    {% for scenario in scenario_prompts %}
+                        <form method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="scenario_message">
+                            <input type="hidden" name="scenario_message" value="{{ scenario }}">
+                            <button type="submit" class="btn-ui btn-ui-secondary scenario-btn">
+                                {{ scenario }}
+                            </button>
+                        </form>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="test-card">
+                <h2>Tester à l’écrit</h2>
+                <p>Pose une vraie question comme un client pour voir comment l’agent répond.</p>
+
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="test_message">
+
+                    <div class="form-row">
+                        {{ test_form.message }}
+                    </div>
+
+                    <div class="button-row">
+                        <button type="submit" class="btn-ui btn-ui-primary">
+                            Envoyer à l’agent
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="test-card">
+                <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;">
+                    <div>
+                        <h3 style="margin-bottom:6px;">Historique de test</h3>
+                        <p style="margin:0;">Chaque réponse peut être corrigée et enregistrée.</p>
+                    </div>
+
+                    <form method="post">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="reset_chat">
+                        <button type="submit" class="btn-ui btn-ui-danger">
+                            Réinitialiser
+                        </button>
+                    </form>
+                </div>
+
+                <div class="chat-history">
+                    {% if chat_history %}
+                        {% for item in chat_history %}
+                            <div class="chat-bubble chat-bubble--user">
+                                <span class="chat-role">Question utilisateur</span>
+                                <div class="chat-text">{{ item.question }}</div>
+                            </div>
+
+                            <div class="chat-bubble chat-bubble--agent">
+                                <span class="chat-role">Réponse de l’agent</span>
+                                <div class="chat-text">{{ item.answer }}</div>
+
+                                <div class="chat-feedback-trigger">
+                                    <button
+                                        type="button"
+                                        class="btn-ui btn-ui-secondary fill-feedback-btn"
+                                        data-question="{{ item.question|escapejs }}"
+                                        data-answer="{{ item.answer|escapejs }}"
+                                        data-channel="text"
+                                    >
+                                        ✏️ Corriger cette réponse
+                                    </button>
+
+                                    <button
+                                        type="button"
+                                        class="btn-ui btn-ui-secondary speak-answer-btn"
+                                        data-answer="{{ item.answer|escapejs }}"
+                                    >
+                                        🔊 Lire cette réponse
+                                    </button>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="empty-box">
+                            Aucun test pour le moment. Pose une première question à ton agent.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="test-col">
+            <div class="test-card">
+                <h2>Tester à l’oral</h2>
+                <p>
+                    Utilise le micro du navigateur pour dicter une question, la convertir
+                    en texte puis l’envoyer dans le test écrit.
+                </p>
+
+                <div class="button-row">
+                    <button type="button" class="btn-ui btn-ui-primary" id="start-voice-btn">
+                        🎤 Démarrer le micro
+                    </button>
+                    <button type="button" class="btn-ui btn-ui-secondary" id="stop-voice-btn">
+                        ⏹ Arrêter
+                    </button>
+                </div>
+
+                <div class="voice-status" id="voice-status">
+                    Micro inactif.
+                </div>
+
+                <div class="form-row" style="margin-top:14px;">
+                    <label>Transcription</label>
+                    <textarea id="voice-transcript" class="test-textarea" rows="5" placeholder="La transcription apparaîtra ici..."></textarea>
+                </div>
+
+                <div class="button-row">
+                    <button type="button" class="btn-ui btn-ui-secondary" id="use-transcript-btn">
+                        Utiliser comme question
+                    </button>
+                </div>
+            </div>
+
+            <div class="test-card">
+                <h2>Corriger une réponse</h2>
+                <p>
+                    Si une réponse ne te plaît pas, écris la bonne version ici.
+                    Elle sera stockée puis synchronisée dans une source dédiée.
+                </p>
+
+                <form method="post" id="feedback-form">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="save_feedback">
+
+                    <div class="form-row">
+                        <label>Question utilisateur</label>
+                        {{ feedback_form.question }}
+                    </div>
+
+                    <div class="form-row">
+                        <label>Réponse initiale de l’agent</label>
+                        {{ feedback_form.agent_answer }}
+                    </div>
+
+                    <div class="form-row">
+                        <label>Réponse attendue</label>
+                        {{ feedback_form.expected_answer }}
+                    </div>
+
+                    <div class="form-row">
+                        <label>Commentaire</label>
+                        {{ feedback_form.comment }}
+                    </div>
+
+                    <div class="form-row">
+                        <label>Canal</label>
+                        {{ feedback_form.channel }}
+                    </div>
+
+                    <div class="button-row">
+                        <button type="submit" class="btn-ui btn-ui-primary">
+                            Enregistrer la correction
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="test-card">
+                <h2>Dernières corrections</h2>
+
+                {% if feedbacks %}
+                    <div class="feedback-list">
+                        {% for item in feedbacks %}
+                            <div class="feedback-item">
+                                <strong>{{ item.question|truncatechars:110 }}</strong>
+                                <div class="meta">
+                                    {{ item.get_channel_display }} · {{ item.created_at|date:"d/m/Y H:i" }}
+                                </div>
+                                <small>
+                                    Réponse attendue : {{ item.expected_answer|truncatechars:180 }}
+                                </small>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="empty-box">
+                        Aucune correction enregistrée pour le moment.
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="test-card">
+                <h2>Base actuelle</h2>
+
+                {% if knowledge_sources %}
+                    <div class="feedback-list">
+                        {% for source in knowledge_sources %}
+                            <div class="feedback-item">
+                                <strong>{{ source.title|default:"Source sans titre" }}</strong>
+                                <div class="meta">
+                                    {{ source.source_type }}{% if source.status %} · {{ source.status }}{% endif %}
+                                </div>
+                                <small>
+                                    {% if source.chunk_count %}
+                                        {{ source.chunk_count }} chunks
+                                    {% else %}
+                                        Source disponible
+                                    {% endif %}
+                                </small>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="empty-box">
+                        Aucune source documentaire pour le moment.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function() {
+        function decodeEscapedUnicode(text) {
+            if (text === null || text === undefined) return "";
+
+            let value = String(text);
+
+            // Gère \u000A, \\u000A, \n, \\n, etc.
+            for (let i = 0; i < 5; i++) {
+                const updated = value
+                    .replace(/\\\\u([0-9a-fA-F]{4})/g, "\\u$1")
+                    .replace(/\\u([0-9a-fA-F]{4})/g, function(_, hex) {
+                        return String.fromCharCode(parseInt(hex, 16));
+                    })
+                    .replace(/\\\\n/g, "\\n")
+                    .replace(/\\\\r/g, "\\r")
+                    .replace(/\\\\t/g, "\\t")
+                    .replace(/\\n/g, "\n")
+                    .replace(/\\r/g, "\r")
+                    .replace(/\\t/g, "\t");
+
+                if (updated === value) break;
+                value = updated;
+            }
+
+            return value;
+        }
+
+        function fixCommonMojibake(text) {
+            if (!text) return "";
+
+            let value = String(text);
+
+            // Corrige les cas fréquents visibles côté front
+            const replacements = {
+                "â": "’",
+                "â": "“",
+                "â": "”",
+                "â": "—",
+                "â": "–",
+                "Ã©": "é",
+                "Ã¨": "è",
+                "Ã ": "à",
+                "Ã¹": "ù",
+                "Ã¢": "â",
+                "Ãª": "ê",
+                "Ã®": "î",
+                "Ã´": "ô",
+                "Ã»": "û",
+                "Ã«": "ë",
+                "Ã¯": "ï",
+                "Ã§": "ç",
+                "Â ": " ",
+                "Â°": "°"
+            };
+
+            Object.keys(replacements).forEach(function(key) {
+                value = value.split(key).join(replacements[key]);
+            });
+
+            return value;
+        }
+
+        function cleanInjectedText(text) {
+            if (text === null || text === undefined) return "";
+
+            let value = String(text);
+
+            value = decodeEscapedUnicode(value);
+            value = fixCommonMojibake(value);
+
+            value = value.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+            value = value.replace(/\u0000/g, "");
+            value = value.replace(/\u00a0/g, " ");
+            value = value.replace(/[ \t]+/g, " ");
+            value = value.replace(/ *\n */g, "\n");
+            value = value.replace(/\n{3,}/g, "\n\n");
+
+            return value.trim();
+        }
+
+        function setCleanValue(element, text) {
+            if (!element) return;
+            element.value = cleanInjectedText(text);
+        }
+
+        function getCleanDataset(button, key) {
+            if (!button || !button.dataset) return "";
+            return cleanInjectedText(button.dataset[key] || "");
+        }
+
+        function speakText(text, langCode) {
+            const cleaned = cleanInjectedText(text);
+
+            if (!("speechSynthesis" in window)) {
+                alert("La lecture vocale n'est pas supportée sur ce navigateur.");
+                return;
+            }
+
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(cleaned);
+            utterance.lang = langCode;
+            window.speechSynthesis.speak(utterance);
+        }
+
+        const greetingText = cleanInjectedText(`{% if agent_settings and agent_settings.greeting_message %}{{ agent_settings.greeting_message|escapejs }}{% else %}Bonjour, je suis votre assistant IA. Comment puis-je vous aider aujourd’hui ?{% endif %}`);
+        const langCode = `{% if agent_settings and agent_settings.language == 'en' %}en-US{% else %}fr-FR{% endif %}`;
+
+        const playGreetingBtn = document.getElementById("play-greeting-btn");
+        const copyGreetingBtn = document.getElementById("copy-greeting-btn");
+        const greetingPreview = document.getElementById("greeting-preview");
+
+        if (greetingPreview) {
+            greetingPreview.textContent = greetingText;
+        }
+
+        if (playGreetingBtn) {
+            playGreetingBtn.addEventListener("click", function() {
+                speakText(greetingText, langCode);
+            });
+        }
+
+        if (copyGreetingBtn) {
+            copyGreetingBtn.addEventListener("click", function() {
+                navigator.clipboard.writeText(cleanInjectedText(greetingText))
+                    .then(() => alert("Message copié."))
+                    .catch(() => alert("Impossible de copier le message."));
+            });
+        }
+
+        document.querySelectorAll(".fill-feedback-btn").forEach(function(btn) {
+            btn.addEventListener("click", function() {
+                const question = getCleanDataset(this, "question");
+                const answer = getCleanDataset(this, "answer");
+                const channel = getCleanDataset(this, "channel") || "text";
+
+                const questionField = document.getElementById("id_question");
+                const answerField = document.getElementById("id_agent_answer");
+                const expectedField = document.getElementById("id_expected_answer");
+                const commentField = document.getElementById("id_comment");
+                const channelField = document.getElementById("id_channel");
+
+                setCleanValue(questionField, question);
+                setCleanValue(answerField, answer);
+
+                if (channelField) {
+                    channelField.value = channel;
+                }
+
+                if (commentField && !commentField.value.trim()) {
+                    commentField.value = "";
+                }
+
+                if (expectedField) {
+                    expectedField.focus();
+                }
+
+                const form = document.getElementById("feedback-form");
+                if (form) {
+                    form.scrollIntoView({ behavior: "smooth", block: "start" });
+                }
+            });
+        });
+
+        document.querySelectorAll(".speak-answer-btn").forEach(function(btn) {
+            btn.addEventListener("click", function() {
+                const text = getCleanDataset(this, "answer");
+                speakText(text, langCode);
+            });
+        });
+
+        const startVoiceBtn = document.getElementById("start-voice-btn");
+        const stopVoiceBtn = document.getElementById("stop-voice-btn");
+        const voiceStatus = document.getElementById("voice-status");
+        const voiceTranscript = document.getElementById("voice-transcript");
+        const useTranscriptBtn = document.getElementById("use-transcript-btn");
+        const testTextarea = document.getElementById("id_message");
+        const feedbackForm = document.getElementById("feedback-form");
+
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        let recognition = null;
+
+        if (feedbackForm) {
+            feedbackForm.addEventListener("submit", function() {
+                [
+                    document.getElementById("id_question"),
+                    document.getElementById("id_agent_answer"),
+                    document.getElementById("id_expected_answer"),
+                    document.getElementById("id_comment")
+                ].forEach(function(field) {
+                    if (field) {
+                        field.value = cleanInjectedText(field.value);
+                    }
+                });
+            });
+        }
+
+        if (!SpeechRecognition) {
+            if (voiceStatus) {
+                voiceStatus.textContent = "La reconnaissance vocale n’est pas supportée sur ce navigateur.";
+            }
+            if (startVoiceBtn) startVoiceBtn.disabled = true;
+            if (stopVoiceBtn) stopVoiceBtn.disabled = true;
+        } else {
+            recognition = new SpeechRecognition();
+            recognition.lang = langCode;
+            recognition.continuous = false;
+            recognition.interimResults = true;
+
+            recognition.onstart = function() {
+                if (voiceStatus) {
+                    voiceStatus.textContent = "Écoute en cours...";
+                }
+            };
+
+            recognition.onresult = function(event) {
+                let transcript = "";
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    transcript += event.results[i][0].transcript;
+                }
+                if (voiceTranscript) {
+                    voiceTranscript.value = cleanInjectedText(transcript);
+                }
+            };
+
+            recognition.onerror = function(event) {
+                if (voiceStatus) {
+                    voiceStatus.textContent = "Erreur micro : " + cleanInjectedText(event.error);
+                }
+            };
+
+            recognition.onend = function() {
+                if (voiceStatus) {
+                    voiceStatus.textContent = "Micro arrêté.";
+                }
+            };
+
+            if (startVoiceBtn) {
+                startVoiceBtn.addEventListener("click", function() {
+                    if (voiceTranscript) {
+                        voiceTranscript.value = "";
+                    }
+                    recognition.start();
+                });
+            }
+
+            if (stopVoiceBtn) {
+                stopVoiceBtn.addEventListener("click", function() {
+                    recognition.stop();
+                });
+            }
+
+            if (useTranscriptBtn) {
+                useTranscriptBtn.addEventListener("click", function() {
+                    if (testTextarea && voiceTranscript) {
+                        testTextarea.value = cleanInjectedText(voiceTranscript.value);
+                        testTextarea.focus();
+                    }
+                });
+            }
+        }
+
+        // Nettoyage préventif des textes visibles déjà rendus
+        document.querySelectorAll(".chat-text, .preview-text").forEach(function(el) {
+            el.textContent = cleanInjectedText(el.textContent);
+        });
+    })();
+</script>
+{% endblock %}

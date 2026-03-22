@@ -14,33 +14,64 @@
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
 </head>
 <body>
-<header class="site-header">
-    <div class="container nav">
-        <a href="{% url 'home' %}" class="logo-wrap">
-            <span class="logo-dot"></span>
-            <span class="logo-text">Décroche.ai</span>
-        </a>
+    <header class="site-header">
+        <div class="container nav">
+            <a href="{% url 'home' %}" class="logo-wrap">
+                <span class="logo-dot"></span>
+                <span class="logo-text">Décroche.ai</span>
+            </a>
 
-        <nav class="menu">
-            <a href="#how-it-works">Comment ça marche</a>
-            <a href="#use-cases">Cas d’usage</a>
-            <a href="#cta">Démo</a>
-        </nav>
+            <nav class="menu">
+                <a href="#how-it-works">Comment ça marche</a>
+                <a href="#use-cases">Cas d’usage</a>
+                <a href="#cta">Démo</a>
+            </nav>
 
-        <div class="nav-actions">
-            {% if user.is_authenticated %}
-                <a href="{% url 'account_email' %}" class="btn btn-secondary">Mon compte</a>
-                <form method="post" action="{% url 'account_logout' %}" style="display:inline;">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-nav">Déconnexion</button>
-                </form>
-            {% else %}
-                <a href="{% url 'account_login' %}" class="btn btn-secondary">Se connecter</a>
-                <a href="{% url 'account_signup' %}" class="btn btn-nav">Essayer gratuitement</a>
-            {% endif %}
+            <div class="nav-actions">
+                {% if user.is_authenticated %}
+
+            <a href="{% url 'account_email' %}"
+               class="btn"
+               style="
+                    color:#4b4b6a;
+                    background: rgba(255,255,255,0.65);
+                    border:1px solid rgba(106,47,216,0.15);
+                    backdrop-filter: blur(6px);
+                    box-shadow: 0 6px 16px rgba(0,0,0,0.05);
+               "
+               onmouseover="
+                    this.style.background='rgba(255,255,255,0.85)';
+                    this.style.transform='translateY(-1px)';
+                    this.style.boxShadow='0 10px 22px rgba(106,47,216,0.12)';
+                    this.style.borderColor='rgba(106,47,216,0.25)';
+               "
+               onmouseout="
+                    this.style.background='rgba(255,255,255,0.65)';
+                    this.style.transform='translateY(0)';
+                    this.style.boxShadow='0 6px 16px rgba(0,0,0,0.05)';
+                    this.style.borderColor='rgba(106,47,216,0.15)';
+               "
+            >
+                Mon espace
+            </a>
+
+                    <form method="post" action="{% url 'account_logout' %}" class="logout-form">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-nav">
+                            Déconnexion
+                        </button>
+                    </form>
+                {% else %}
+                    <a href="{% url 'account_login' %}" class="btn btn-secondary">
+                        Se connecter
+                    </a>
+                    <a href="{% url 'account_signup' %}" class="btn btn-nav">
+                        Essayer gratuitement
+                    </a>
+                {% endif %}
+            </div>
         </div>
-    </div>
-</header>
+    </header>
 
     <main>
         {% block content %}{% endblock %}

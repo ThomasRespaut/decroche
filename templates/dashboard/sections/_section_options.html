@@ -1,0 +1,140 @@
+<div class="form-section" id="options">
+    <div class="section-card">
+        <div class="section-header section-header--with-action">
+            <div>
+                <span class="section-eyebrow">Fonctionnalités</span>
+                <h3>Capacités activées de l’agent</h3>
+                <p>
+                    Active les briques utiles à ton usage : suivi par SMS, transcription,
+                    enregistrement, accès à la base documentaire, réservation ou transfert.
+                </p>
+            </div>
+
+            <button type="submit" class="save-button-top">
+                Enregistrer
+            </button>
+        </div>
+
+        <div class="checkbox-grid">
+            <label class="checkbox-card">
+                {{ options_form.enable_sms_summary }}
+                <span>
+                    <strong>Résumé SMS</strong>
+                    <span>Envoie un résumé automatique après l’appel.</span>
+                </span>
+            </label>
+            {% if options_form.enable_sms_summary.errors %}
+                <ul class="form-errors">
+                    {% for error in options_form.enable_sms_summary.errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+
+            <label class="checkbox-card">
+                {{ options_form.enable_transcription }}
+                <span>
+                    <strong>Transcription</strong>
+                    <span>Conserve le contenu textuel de la conversation.</span>
+                </span>
+            </label>
+            {% if options_form.enable_transcription.errors %}
+                <ul class="form-errors">
+                    {% for error in options_form.enable_transcription.errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+
+            <label class="checkbox-card">
+                {{ options_form.enable_call_recording }}
+                <span>
+                    <strong>Enregistrement d’appel</strong>
+                    <span>Permet de conserver l’audio si ton flux d’appel le prévoit.</span>
+                </span>
+            </label>
+            {% if options_form.enable_call_recording.errors %}
+                <ul class="form-errors">
+                    {% for error in options_form.enable_call_recording.errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+
+            <label class="checkbox-card">
+                {{ options_form.enable_rag }}
+                <span>
+                    <strong>Utiliser la base documentaire</strong>
+                    <span>Autorise l’agent à s’appuyer sur le site, les PDF et les textes ajoutés.</span>
+                </span>
+            </label>
+            {% if options_form.enable_rag.errors %}
+                <ul class="form-errors">
+                    {% for error in options_form.enable_rag.errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+
+            <label class="checkbox-card">
+                {{ options_form.enable_appointment_booking }}
+                <span>
+                    <strong>Prise de rendez-vous</strong>
+                    <span>À activer si l’agent doit proposer ou préparer une réservation de créneau.</span>
+                </span>
+            </label>
+            {% if options_form.enable_appointment_booking.errors %}
+                <ul class="form-errors">
+                    {% for error in options_form.enable_appointment_booking.errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+
+            <label class="checkbox-card">
+                {{ options_form.enable_table_booking }}
+                <span>
+                    <strong>Réservation</strong>
+                    <span>Utile pour restaurant, salon, prestation ou toute logique de réservation.</span>
+                </span>
+            </label>
+            {% if options_form.enable_table_booking.errors %}
+                <ul class="form-errors">
+                    {% for error in options_form.enable_table_booking.errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+
+            <label class="checkbox-card">
+                {{ options_form.enable_human_transfer }}
+                <span>
+                    <strong>Transfert vers un humain</strong>
+                    <span>Permet de transférer ou de proposer une reprise manuelle du contact.</span>
+                </span>
+            </label>
+            {% if options_form.enable_human_transfer.errors %}
+                <ul class="form-errors">
+                    {% for error in options_form.enable_human_transfer.errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+
+            <label class="checkbox-card">
+                {{ options_form.enable_sms_followup }}
+                <span>
+                    <strong>SMS de suivi</strong>
+                    <span>Envoi d’un message après l’appel avec lien, confirmation ou information utile.</span>
+                </span>
+            </label>
+            {% if options_form.enable_sms_followup.errors %}
+                <ul class="form-errors">
+                    {% for error in options_form.enable_sms_followup.errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        </div>
+    </div>
+</div>

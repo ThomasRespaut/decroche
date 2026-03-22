@@ -1,0 +1,279 @@
+<form method="post" class="section-form">
+    {% csrf_token %}
+    <input type="hidden" name="section" value="ai">
+
+    <div class="form-section" id="ia">
+        <div class="section-card">
+            <div class="section-header section-header--with-action">
+                <div>
+                    <span class="section-eyebrow">Personnalité IA</span>
+                    <h3>Paramètres avancés de l’agent vocal</h3>
+                    <p>
+                        Définis ici comment l’agent parle, comment il structure ses réponses
+                        et quel niveau d’autonomie tu veux lui donner dans la conversation.
+                    </p>
+                </div>
+
+                <button type="submit" class="save-button-top">
+                    Enregistrer
+                </button>
+            </div>
+
+            <div class="form-grid">
+                <div class="field-group">
+                    <label for="{{ agent_form.ai_name.id_for_label }}">Nom de l’IA</label>
+                    {{ agent_form.ai_name }}
+                    {% if agent_form.ai_name.errors %}
+                        <ul class="form-errors">
+                            {% for error in agent_form.ai_name.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+
+                <div class="field-group">
+                    <label for="{{ agent_form.tone.id_for_label }}">Ton de voix</label>
+                    {{ agent_form.tone }}
+                    {% if agent_form.tone.errors %}
+                        <ul class="form-errors">
+                            {% for error in agent_form.tone.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+
+                <div class="field-group">
+                    <label for="{{ agent_form.voice.id_for_label }}">Voix</label>
+
+                    <div class="voice-picker-row">
+                        <div class="voice-select-wrap">
+                            {{ agent_form.voice }}
+                        </div>
+
+                        <button type="button" id="preview-voice-btn" class="voice-preview-btn">
+                            ▶ Écouter
+                        </button>
+                    </div>
+
+                    <div class="field-help">
+                        Choisis la voix utilisée pour rendre l’expérience plus cohérente avec la marque.
+                    </div>
+
+                    <div id="voice-preview-status" class="voice-preview-status" aria-live="polite"></div>
+
+                    <audio
+                        id="voice-preview-audio"
+                        controls
+                        style="display:none; margin-top:10px; width:100%;"
+                    ></audio>
+
+                    {% if agent_form.voice.errors %}
+                        <ul class="form-errors">
+                            {% for error in agent_form.voice.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+
+                <div class="field-group">
+                    <label for="{{ agent_form.language.id_for_label }}">Langue</label>
+                    {{ agent_form.language }}
+                    {% if agent_form.language.errors %}
+                        <ul class="form-errors">
+                            {% for error in agent_form.language.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+
+                <div class="field-group full">
+                    <label for="{{ agent_form.greeting_message.id_for_label }}">Message d’accueil</label>
+                    {{ agent_form.greeting_message }}
+                    <div class="field-help">
+                        Utilisé pour l’ouverture de conversation. Mets un accueil fidèle à ton entreprise.
+                    </div>
+                    {% if agent_form.greeting_message.errors %}
+                        <ul class="form-errors">
+                            {% for error in agent_form.greeting_message.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+
+                <div class="field-group full">
+                    <label for="{{ agent_form.system_prompt.id_for_label }}">Instructions personnalisées</label>
+                    {{ agent_form.system_prompt }}
+                    <div class="field-help">
+                        Décris précisément la posture attendue : questions à poser, infos à collecter,
+                        règles métier, services à proposer, cas à escalader, ton à employer,
+                        formulation des réponses, comportement attendu si une information manque.
+                    </div>
+                    {% if agent_form.system_prompt.errors %}
+                        <ul class="form-errors">
+                            {% for error in agent_form.system_prompt.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+
+                <div class="field-group full">
+                    <label for="{{ agent_form.response_style.id_for_label }}">Style de réponse</label>
+                    {{ agent_form.response_style }}
+                    <div class="field-help">
+                        Exemple : “réponses courtes et rassurantes”, “plus commerciales”, “très directes”.
+                    </div>
+                    {% if agent_form.response_style.errors %}
+                        <ul class="form-errors">
+                            {% for error in agent_form.response_style.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+
+                <div class="field-group full">
+                    <label for="{{ agent_form.fallback_message.id_for_label }}">Message de secours</label>
+                    {{ agent_form.fallback_message }}
+                    <div class="field-help">
+                        Réponse utilisée lorsque l’agent n’a pas l’information ou préfère prendre un message.
+                    </div>
+                    {% if agent_form.fallback_message.errors %}
+                        <ul class="form-errors">
+                            {% for error in agent_form.fallback_message.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+
+                <div class="field-group">
+                    <label for="{{ agent_form.twilio_phone_number.id_for_label }}">Numéro Twilio</label>
+                    {{ agent_form.twilio_phone_number }}
+                    <div class="field-help">
+                        Numéro associé à cet agent vocal.
+                    </div>
+                    {% if agent_form.twilio_phone_number.errors %}
+                        <ul class="form-errors">
+                            {% for error in agent_form.twilio_phone_number.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+
+                <div class="field-group">
+                    <label for="{{ agent_form.max_call_duration_seconds.id_for_label }}">Durée max d’appel (secondes)</label>
+                    {{ agent_form.max_call_duration_seconds }}
+                    {% if agent_form.max_call_duration_seconds.errors %}
+                        <ul class="form-errors">
+                            {% for error in agent_form.max_call_duration_seconds.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="checkbox-grid" style="margin-top: 18px;">
+                <label class="checkbox-card">
+                    {{ agent_form.interruptible }}
+                    <span>
+                        <strong>Agent interruptible</strong>
+                        <span>L’appelant peut interrompre l’agent pendant qu’il parle pour rendre l’échange plus naturel.</span>
+                    </span>
+                </label>
+            </div>
+        </div>
+    </div>
+</form>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const voiceSelect = document.getElementById("{{ agent_form.voice.id_for_label }}");
+    const previewBtn = document.getElementById("preview-voice-btn");
+    const statusEl = document.getElementById("voice-preview-status");
+    const audioEl = document.getElementById("voice-preview-audio");
+    let currentAudioUrl = null;
+
+    if (!voiceSelect || !previewBtn || !statusEl || !audioEl) return;
+
+    previewBtn.addEventListener("click", async function () {
+        const voice = voiceSelect.value;
+
+        if (!voice) {
+            statusEl.textContent = "Choisis d’abord une voix.";
+            return;
+        }
+
+        previewBtn.disabled = true;
+        previewBtn.textContent = "Lecture...";
+        statusEl.textContent = "Génération de l’aperçu audio...";
+        audioEl.style.display = "none";
+        audioEl.pause();
+        audioEl.removeAttribute("src");
+
+        if (currentAudioUrl) {
+            URL.revokeObjectURL(currentAudioUrl);
+            currentAudioUrl = null;
+        }
+
+        try {
+            const response = await fetch("{% url 'preview_voice' %}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": getCookie("csrftoken"),
+                },
+                body: JSON.stringify({
+                    voice: voice,
+                    text: "Bonjour, je suis votre assistant vocal. Je peux répondre à vos appels, qualifier les demandes et prendre des messages avec naturel."
+                })
+            });
+
+            if (!response.ok) {
+                let errorText = "Impossible de générer l’aperçu.";
+                try {
+                    const data = await response.json();
+                    if (data.error) errorText = data.error;
+                } catch (e) {}
+                throw new Error(errorText);
+            }
+
+            const blob = await response.blob();
+            currentAudioUrl = URL.createObjectURL(blob);
+
+            audioEl.src = currentAudioUrl;
+            audioEl.style.display = "block";
+            statusEl.textContent = "Aperçu prêt.";
+            await audioEl.play();
+        } catch (error) {
+            console.error(error);
+            statusEl.textContent = error.message || "Erreur lors de la génération de l’aperçu.";
+        } finally {
+            previewBtn.disabled = false;
+            previewBtn.textContent = "▶ Écouter";
+        }
+    });
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== "") {
+            const cookies = document.cookie.split(";");
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + "=")) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+});
+</script>

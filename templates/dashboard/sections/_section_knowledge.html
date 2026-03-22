@@ -1,0 +1,635 @@
+<div class="form-section" id="knowledge">
+    <div class="section-card knowledge-section-card">
+        <div class="section-header knowledge-header">
+            <span class="section-eyebrow">Base documentaire</span>
+            <h3>Contenus utilisés pour personnaliser l’agent</h3>
+            <p>
+                Ajoute ici les vraies sources d’information de l’entreprise : site web,
+                brochure PDF, menu, procédure, FAQ ou notes internes. Ces contenus
+                peuvent ensuite servir de base à ton agent pour répondre avec le bon contexte.
+            </p>
+        </div>
+
+        <div class="knowledge-banner knowledge-banner--intro">
+            <div class="knowledge-banner__icon">📚</div>
+            <div>
+                <strong>Objectif</strong>
+                <p>
+                    Plus ta base documentaire est riche et claire, plus l’agent sera précis.
+                    L’idéal est de combiner un bon profil entreprise, des consignes métier,
+                    un site web et des documents de référence.
+                </p>
+            </div>
+        </div>
+
+        {% if agent_settings.pk %}
+            <div class="knowledge-block">
+                <div class="knowledge-block__header">
+                    <div>
+                        <h4>Ajouter une source</h4>
+                        <p>
+                            Renseigne une nouvelle source pour enrichir la base de connaissance de l’agent.
+                        </p>
+                    </div>
+                </div>
+
+                <form
+                    method="post"
+                    action="{% url 'add_knowledge_source' agent.id %}"
+                    enctype="multipart/form-data"
+                    novalidate
+                    class="knowledge-form"
+                >
+                    {% csrf_token %}
+
+                    {% if knowledge_form.non_field_errors %}
+                        <ul class="form-errors" style="margin-top:16px;">
+                            {% for error in knowledge_form.non_field_errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+
+                    <div class="form-grid knowledge-form-grid">
+                        <div class="field-group">
+                            <label for="{{ knowledge_form.source_type.id_for_label }}">Type de source</label>
+                            {{ knowledge_form.source_type }}
+                            {% if knowledge_form.source_type.errors %}
+                                <ul class="form-errors">
+                                    {% for error in knowledge_form.source_type.errors %}
+                                        <li>{{ error }}</li>
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
+                        </div>
+
+                        <div class="field-group">
+                            <label for="{{ knowledge_form.title.id_for_label }}">Titre</label>
+                            {{ knowledge_form.title }}
+                            <div class="field-help">
+                                Exemple : “Site principal”, “Menu printemps”, “FAQ cabinet”, “Procédure SAV”.
+                            </div>
+                            {% if knowledge_form.title.errors %}
+                                <ul class="form-errors">
+                                    {% for error in knowledge_form.title.errors %}
+                                        <li>{{ error }}</li>
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
+                        </div>
+
+                        <div class="field-group full" id="group-website-url">
+                            <label for="{{ knowledge_form.website_url.id_for_label }}">URL du site web à analyser</label>
+                            {{ knowledge_form.website_url }}
+                            <div class="field-help">
+                                Tu peux ajouter ici une URL spécifique si tu veux indexer une page précise.
+                            </div>
+                            {% if knowledge_form.website_url.errors %}
+                                <ul class="form-errors">
+                                    {% for error in knowledge_form.website_url.errors %}
+                                        <li>{{ error }}</li>
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
+                        </div>
+
+                        <div class="field-group full" id="group-file">
+                            <label for="{{ knowledge_form.file.id_for_label }}">Importer un PDF</label>
+                            {{ knowledge_form.file }}
+                            <div class="field-help">
+                                PDF de présentation, brochure, carte, catalogue, procédures, guide interne,
+                                conditions, fiches services, etc.
+                            </div>
+                            {% if knowledge_form.file.errors %}
+                                <ul class="form-errors">
+                                    {% for error in knowledge_form.file.errors %}
+                                        <li>{{ error }}</li>
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
+                        </div>
+
+                        <div class="field-group full" id="group-raw-text">
+                            <label for="{{ knowledge_form.raw_text.id_for_label }}">Texte libre / FAQ / consignes internes</label>
+                            {{ knowledge_form.raw_text }}
+                            <div class="field-help">
+                                Tu peux coller ici une FAQ, des réponses types, des règles internes,
+                                une présentation détaillée, des arguments commerciaux, ou tout ce que
+                                l’agent doit connaître même si cela n’existe ni sur le site ni dans un PDF.
+                            </div>
+                            {% if knowledge_form.raw_text.errors %}
+                                <ul class="form-errors">
+                                    {% for error in knowledge_form.raw_text.errors %}
+                                        <li>{{ error }}</li>
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="ocr-panel">
+                        <label class="ocr-card">
+                            <div class="ocr-card__checkbox">
+                                {{ knowledge_form.use_ocr }}
+                            </div>
+                            <div class="ocr-card__content">
+                                <strong>Activer l’OCR</strong>
+                                <span>
+                                    À utiliser si ton PDF est un scan ou une image et ne contient pas de texte sélectionnable.
+                                    L’OCR tentera d’extraire automatiquement le contenu.
+                                </span>
+                            </div>
+                        </label>
+                    </div>
+
+                    <div class="source-actions source-actions--add">
+                        <button type="submit" class="save-button-top add-source-button">
+                            Ajouter la source
+                        </button>
+                    </div>
+                </form>
+            </div>
+        {% else %}
+            <div class="knowledge-banner" style="margin-top:18px;">
+                <strong>Enregistre d’abord l’agent</strong>
+                <p>
+                    Il faut d’abord créer l’agent une première fois pour pouvoir lui rattacher des sources documentaires.
+                </p>
+            </div>
+        {% endif %}
+
+        <div class="knowledge-library-header">
+            <div class="section-header knowledge-library-header__text">
+                <span class="section-eyebrow">Bibliothèque RAG</span>
+                <h3>Sources déjà ajoutées</h3>
+                <p>
+                    Consulte, modifie, supprime ou exporte les contenus réellement utilisés par l’agent.
+                </p>
+            </div>
+
+            <div class="knowledge-library-header__actions">
+                {% if agent.pk %}
+                    <a
+                        href="{% url 'export_knowledge_sources' agent.id %}"
+                        class="save-button-top secondary-button"
+                        style="text-decoration:none;"
+                    >
+                        Exporter toutes les sources
+                    </a>
+
+                    <form
+                        method="post"
+                        action="{% url 'clean_knowledge_sources' agent.id %}"
+                        class="clean-form"
+                    >
+                        {% csrf_token %}
+                        <button
+                            type="submit"
+                            class="save-button-top clean-button"
+                            onclick="return confirm('Nettoyer automatiquement les textes de toutes les sources ?');"
+                        >
+                            Nettoyer
+                        </button>
+                    </form>
+                {% endif %}
+            </div>
+        </div>
+
+        {% if knowledge_sources %}
+            <div class="sources-grid">
+                {% for source in knowledge_sources %}
+                    <div class="source-card">
+                        <div class="source-card__top">
+                            <div class="source-card__heading">
+                                <h4 class="source-card__title">
+                                    {{ source.title|default:"Source sans titre" }}
+                                </h4>
+                                <p class="source-card__meta">
+                                    Type : {{ source.get_source_type_display }}
+                                </p>
+                            </div>
+
+                            <span class="status-badge {% if source.status == 'ready' %}status-ready{% elif source.status == 'processing' %}status-processing{% elif source.status == 'error' %}status-error{% else %}status-pending{% endif %}">
+                                {{ source.get_status_display }}
+                            </span>
+                        </div>
+
+                        <div class="source-card__stats">
+                            <span class="source-chip">Chunks : {{ source.chunk_count }}</span>
+                            <span class="source-chip">Pages : {{ source.page_count }}</span>
+                            {% if source.use_ocr %}
+                                <span class="source-chip">OCR activée</span>
+                            {% endif %}
+                            {% if source.last_synced_at %}
+                                <span class="source-chip">Analyse : {{ source.last_synced_at|date:"d/m/Y H:i" }}</span>
+                            {% endif %}
+                        </div>
+
+                        {% if source.website_url %}
+                            <div class="source-card__meta source-card__url">
+                                {{ source.website_url }}
+                            </div>
+                        {% endif %}
+
+                        {% if source.error_message %}
+                            <div class="source-card__error">
+                                {{ source.error_message }}
+                            </div>
+                        {% endif %}
+
+                        <form
+                            method="post"
+                            action="{% url 'update_knowledge_source' source.id %}"
+                            class="source-edit-form"
+                            novalidate
+                        >
+                            {% csrf_token %}
+
+                            <label for="edited_text_{{ source.id }}" class="source-edit-form__label">
+                                Contenu consultable / modifiable
+                            </label>
+
+                            <textarea
+                                id="edited_text_{{ source.id }}"
+                                name="edited_text"
+                                class="source-edit-form__textarea"
+                            >{% firstof source.extracted_text source.raw_text "" %}</textarea>
+
+                            <div class="source-actions source-actions--card">
+                                <button
+                                    type="submit"
+                                    class="save-button-top"
+                                >
+                                    Enregistrer
+                                </button>
+                            
+                                <button
+                                    type="submit"
+                                    class="save-button-top ai-button"
+                                    formaction="{% url 'optimize_knowledge_source' source.id %}"
+                                    formmethod="post"
+                                    formnovalidate
+                                    onclick="return confirm('Lancer l’optimisation IA de cette source pour nettoyer, restructurer et améliorer le texte pour la RAG ?');"
+                                >
+                                    Optimiser IA
+                                </button>
+                            
+                                <a
+                                    href="{% url 'export_knowledge_source' source.id %}"
+                                    class="save-button-top secondary-button"
+                                    style="text-decoration:none;"
+                                >
+                                    Exporter
+                                </a>
+                            
+                                <button
+                                    type="submit"
+                                    class="danger-button"
+                                    formaction="{% url 'delete_knowledge_source' source.id %}"
+                                    formmethod="post"
+                                    formnovalidate
+                                    onclick="return confirm('Supprimer cette source et ses chunks ?');"
+                                >
+                                    Supprimer
+                                </button>
+                            </div>
+                                                        
+                        </form>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="knowledge-banner knowledge-banner--empty" style="margin-top:18px;">
+                <div class="knowledge-banner__icon">✨</div>
+                <div>
+                    <strong>Aucune source enregistrée</strong>
+                    <p>
+                        Ajoute un site web, un PDF ou du texte libre pour commencer à construire
+                        la base documentaire de ton agent.
+                    </p>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+    .knowledge-section-card {
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+    }
+
+    .knowledge-header {
+        margin-bottom: 0;
+    }
+
+    .knowledge-banner {
+        display: flex;
+        align-items: flex-start;
+        gap: 14px;
+        padding: 18px 20px;
+        border-radius: 20px;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .knowledge-banner--intro {
+        background: linear-gradient(180deg, rgba(118, 131, 255, 0.10), rgba(118, 131, 255, 0.04));
+        border-color: rgba(118, 131, 255, 0.18);
+    }
+
+    .knowledge-banner--empty {
+        background: rgba(255, 255, 255, 0.03);
+    }
+
+    .knowledge-banner__icon {
+        width: 42px;
+        height: 42px;
+        flex: 0 0 42px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 14px;
+        background: rgba(118, 131, 255, 0.14);
+        font-size: 1.15rem;
+    }
+
+    .knowledge-banner strong {
+        display: block;
+        margin-bottom: 6px;
+        font-size: 1rem;
+    }
+
+    .knowledge-banner p {
+        margin: 0;
+        line-height: 1.65;
+        color: rgba(255,255,255,0.78);
+    }
+
+    .knowledge-block {
+        padding: 24px;
+        border-radius: 22px;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .knowledge-block__header {
+        margin-bottom: 18px;
+    }
+
+    .knowledge-block__header h4 {
+        margin: 0 0 6px;
+        font-size: 1.15rem;
+        font-weight: 700;
+        color: #fff;
+    }
+
+    .knowledge-block__header p {
+        margin: 0;
+        color: rgba(255,255,255,0.72);
+        line-height: 1.6;
+    }
+
+    .knowledge-form-grid {
+        margin-top: 0 !important;
+    }
+
+    .ocr-panel {
+        margin-top: 18px;
+    }
+
+    .ocr-card {
+        display: flex;
+        align-items: flex-start;
+        gap: 16px;
+        padding: 18px 20px;
+        border-radius: 20px;
+        background: rgba(255, 255, 255, 0.035);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        cursor: pointer;
+        transition: 0.2s ease;
+    }
+
+    .ocr-card:hover {
+        border-color: rgba(118, 131, 255, 0.30);
+        background: rgba(118, 131, 255, 0.05);
+    }
+
+    .ocr-card__checkbox {
+        padding-top: 2px;
+        flex-shrink: 0;
+    }
+
+    .ocr-card__checkbox input {
+        width: 20px;
+        height: 20px;
+        accent-color: #7b86ff;
+        cursor: pointer;
+    }
+
+    .ocr-card__content {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .ocr-card__content strong {
+        font-size: 1rem;
+        color: #fff;
+    }
+
+    .ocr-card__content span {
+        color: rgba(255,255,255,0.74);
+        line-height: 1.65;
+        font-size: 0.95rem;
+    }
+
+    .source-actions--add {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: 22px;
+    }
+
+    .add-source-button {
+        min-width: 240px;
+    }
+
+    .knowledge-library-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        gap: 18px;
+        flex-wrap: wrap;
+        margin-top: 6px;
+        padding-top: 6px;
+    }
+
+    .knowledge-library-header__text {
+        margin-bottom: 0;
+    }
+
+    .knowledge-library-header__text h3 {
+        font-size: 1.12rem;
+        margin-bottom: 6px;
+    }
+
+    .knowledge-library-header__actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .clean-form {
+        margin: 0;
+    }
+
+    .clean-button {
+        background: linear-gradient(135deg, #4fce8b, #2fa86b) !important;
+        border: none;
+        color: #fff;
+    }
+
+    .clean-button:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 10px 24px rgba(47, 168, 107, 0.26);
+    }
+
+    .source-card__heading {
+        min-width: 0;
+    }
+
+    .source-card__url {
+        margin-top: 10px;
+        word-break: break-word;
+    }
+
+    .source-edit-form {
+        margin-top: 16px;
+    }
+
+    .source-edit-form__label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        font-size: 0.95rem;
+    }
+
+    .source-edit-form__textarea {
+        width: 100%;
+        min-height: 260px;
+        padding: 14px 16px;
+        border-radius: 14px;
+        border: 1px solid rgba(255,255,255,0.12);
+        background: rgba(9,14,29,0.72);
+        color: var(--text);
+        font-size: 0.95rem;
+        resize: vertical;
+        box-sizing: border-box;
+    }
+
+    .source-edit-form__textarea:focus {
+        outline: none;
+        border-color: rgba(118, 131, 255, 0.45);
+        box-shadow: 0 0 0 4px rgba(118, 131, 255, 0.10);
+    }
+
+    .source-actions--card {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: 14px;
+    }
+
+    @media (max-width: 768px) {
+        .knowledge-block {
+            padding: 18px;
+        }
+
+        .knowledge-banner {
+            padding: 16px;
+        }
+
+        .ocr-card {
+            padding: 16px;
+        }
+
+        .knowledge-library-header {
+            align-items: stretch;
+        }
+
+        .knowledge-library-header__actions {
+            width: 100%;
+        }
+
+        .knowledge-library-header__actions > * {
+            width: 100%;
+        }
+
+        .knowledge-library-header__actions a,
+        .knowledge-library-header__actions button {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .source-actions--card > * {
+            width: 100%;
+            text-align: center;
+            justify-content: center;
+        }
+
+        .add-source-button {
+            width: 100%;
+        }
+        
+        .ai-button {
+            background: linear-gradient(135deg, #7b86ff, #5b66f5) !important;
+            border: none;
+            color: #fff;
+        }
+        
+        .ai-button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 24px rgba(91, 102, 245, 0.28);
+        }
+
+    }
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const sourceType = document.getElementById("id_source_type");
+    const websiteGroup = document.getElementById("group-website-url");
+    const fileGroup = document.getElementById("group-file");
+    const textGroup = document.getElementById("group-raw-text");
+
+    function toggleKnowledgeFields() {
+        if (!sourceType) return;
+
+        const value = sourceType.value;
+
+        if (websiteGroup) {
+            websiteGroup.style.display = (value === "website") ? "" : "none";
+        }
+
+        if (fileGroup) {
+            fileGroup.style.display = (value === "pdf") ? "" : "none";
+        }
+
+        if (textGroup) {
+            textGroup.style.display = (value === "text") ? "" : "none";
+        }
+    }
+
+    if (sourceType) {
+        sourceType.addEventListener("change", toggleKnowledgeFields);
+        toggleKnowledgeFields();
+    }
+});
+</script>

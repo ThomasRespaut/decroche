@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block content %}
+{% include "dashboard/partials/_dashboard_styles.html" %}
+
+<div class="dashboard-page">
+    {% include "dashboard/partials/_dashboard_hero.html" %}
+
+    <div class="dashboard-grid">
+        {% include "dashboard/partials/_dashboard_sidebar.html" %}
+
+        <section class="dashboard-main-card">
+
+            <div class="dashboard-premium-banner">
+                <div class="dashboard-premium-banner__content">
+                    <div class="dashboard-premium-banner__icon">🎉</div>
+                    <div class="dashboard-premium-banner__text">
+                        <strong>Votre agent est prêt</strong>
+                        <p>
+                            La configuration principale est terminée. Vous pouvez maintenant
+                            tester votre agent pour vérifier son ton, ses réponses et son
+                            comportement avant la mise en ligne.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="dashboard-premium-banner__actions">
+                    <a href="{% url 'test_agent' %}" class="btn-test-agent">
+                        🎙 Tester mon agent
+                    </a>
+                </div>
+            </div>
+
+            <div class="main-card-header">
+                <div>
+                    <h2>Configuration avancée de l’agent</h2>
+                    <p>
+                        Centralise ici toutes les informations utiles à ton assistant pour qu’il
+                        puisse répondre comme un vrai collaborateur de l’entreprise.
+                    </p>
+                </div>
+            </div>
+
+            <div class="main-card-body">
+                {% include "dashboard/partials/_dashboard_messages.html" %}
+
+                <form method="post" class="section-form">
+                    {% csrf_token %}
+                    <input type="hidden" name="section" value="profile">
+                    {% include "dashboard/sections/_section_profile.html" %}
+                </form>
+
+                <form method="post" class="section-form">
+                    {% csrf_token %}
+                    <input type="hidden" name="section" value="ai">
+                    {% include "dashboard/sections/_section_ai.html" %}
+                </form>
+
+                {% include "dashboard/sections/_section_knowledge.html" %}
+
+                <form method="post" class="section-form">
+                    {% csrf_token %}
+                    <input type="hidden" name="section" value="options">
+                    {% include "dashboard/sections/_section_options.html" %}
+                </form>
+            </div>
+        </section>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,188 @@
+<form method="post" class="section-form">
+    {% csrf_token %}
+    <input type="hidden" name="section" value="profile">
+
+    <div class="form-section" id="profil">
+        <div class="section-card">
+            <div class="section-header section-header--with-action">
+                <div>
+                    <span class="section-eyebrow">Entreprise</span>
+                    <h3>Profil de l’activité</h3>
+                    <p>
+                        Ces informations servent de socle à l’agent : qui il représente,
+                        dans quel secteur il évolue, comment il doit présenter l’entreprise
+                        et quelles informations de base il doit connaître.
+                    </p>
+                </div>
+
+                <button type="submit" class="save-button-top">
+                    Enregistrer
+                </button>
+            </div>
+
+            <div class="form-grid">
+                <div class="field-group">
+                    <label for="{{ profile_form.company_name.id_for_label }}">Nom de l’entreprise</label>
+                    {{ profile_form.company_name }}
+                    {% if profile_form.company_name.errors %}
+                        <ul class="form-errors">
+                            {% for error in profile_form.company_name.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+
+                <div class="field-group">
+                    <label for="{{ profile_form.activity_type.id_for_label }}">Type d’activité</label>
+                    {{ profile_form.activity_type }}
+                    {% if profile_form.activity_type.errors %}
+                        <ul class="form-errors">
+                            {% for error in profile_form.activity_type.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+
+                <div class="field-group">
+                    <label for="{{ profile_form.phone.id_for_label }}">Téléphone principal</label>
+                    {{ profile_form.phone }}
+                    <div class="field-help">
+                        Ligne principale de l’entreprise ou numéro de contact affiché.
+                    </div>
+                    {% if profile_form.phone.errors %}
+                        <ul class="form-errors">
+                            {% for error in profile_form.phone.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+
+                <div class="field-group">
+                    <label for="{{ profile_form.website_url.id_for_label }}">Site web principal</label>
+                    {{ profile_form.website_url }}
+                    <div class="field-help">
+                        Le site de l’entreprise peut servir de base initiale de contexte.
+                    </div>
+                    {% if profile_form.website_url.errors %}
+                        <ul class="form-errors">
+                            {% for error in profile_form.website_url.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+
+                <div class="field-group full">
+                    <label for="{{ profile_form.business_description.id_for_label }}">Description de l’activité</label>
+                    {{ profile_form.business_description }}
+                    <div class="field-help">
+                        Décris clairement les services, produits, spécialités, demandes fréquentes
+                        et la manière dont l’entreprise se présente à ses clients.
+                    </div>
+                    {% if profile_form.business_description.errors %}
+                        <ul class="form-errors">
+                            {% for error in profile_form.business_description.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+
+                <div class="field-group full">
+                    <label for="{{ profile_form.opening_hours.id_for_label }}">Horaires d’ouverture</label>
+                    {{ profile_form.opening_hours }}
+                    <div class="field-help">
+                        Exemple : Lun-Ven 9h-18h, Sam 10h-14h, fermé le dimanche.
+                    </div>
+                    {% if profile_form.opening_hours.errors %}
+                        <ul class="form-errors">
+                            {% for error in profile_form.opening_hours.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+
+                <div class="field-group">
+                    <label for="{{ profile_form.address.id_for_label }}">Adresse</label>
+                    {{ profile_form.address }}
+                    {% if profile_form.address.errors %}
+                        <ul class="form-errors">
+                            {% for error in profile_form.address.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+
+                <div class="field-group">
+                    <label for="{{ profile_form.city.id_for_label }}">Ville</label>
+                    {{ profile_form.city }}
+                    {% if profile_form.city.errors %}
+                        <ul class="form-errors">
+                            {% for error in profile_form.city.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+
+                <div class="field-group">
+                    <label for="{{ profile_form.postal_code.id_for_label }}">Code postal</label>
+                    {{ profile_form.postal_code }}
+                    {% if profile_form.postal_code.errors %}
+                        <ul class="form-errors">
+                            {% for error in profile_form.postal_code.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+
+                <div class="field-group full">
+                    <label for="{{ profile_form.extra_notes.id_for_label }}">Notes internes entreprise</label>
+                    {{ profile_form.extra_notes }}
+                    <div class="field-help">
+                        Ajoute les consignes qui ne figurent pas sur le site : zones desservies,
+                        règles internes, exceptions, priorités commerciales, réponses à éviter,
+                        informations sensibles ou éléments importants pour l’accueil téléphonique.
+                    </div>
+                    {% if profile_form.extra_notes.errors %}
+                        <ul class="form-errors">
+                            {% for error in profile_form.extra_notes.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+<style>
+    .section-form {
+    margin-bottom: 24px;
+}
+
+.section-header--with-action {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+}
+
+@media (max-width: 900px) {
+    .section-header--with-action {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .section-header--with-action .save-button-top {
+        width: 100%;
+    }
+}
+</style>

@@ -1,0 +1,62 @@
+<aside class="dashboard-sidebar">
+    <h2 class="sidebar-title">Tableau de bord</h2>
+    <p class="sidebar-subtitle">
+        Structure ton entreprise, ta voix, tes règles métier et ta base documentaire
+        pour obtenir un agent vraiment aligné avec ton activité.
+    </p>
+
+    <div class="sidebar-nav">
+        <a href="#profil" class="sidebar-link active">
+            <span class="sidebar-link__icon">🏢</span>
+            <span>Profil entreprise</span>
+        </a>
+        <a href="#ia" class="sidebar-link">
+            <span class="sidebar-link__icon">🤖</span>
+            <span>Personnalité IA</span>
+        </a>
+        <a href="#knowledge" class="sidebar-link">
+            <span class="sidebar-link__icon">📚</span>
+            <span>Base documentaire</span>
+        </a>
+        <a href="#options" class="sidebar-link">
+            <span class="sidebar-link__icon">⚙️</span>
+            <span>Fonctionnalités</span>
+        </a>
+    </div>
+
+    <div class="sidebar-mini-grid">
+        <div class="stats-card">
+            <span class="stats-card__label">SMS</span>
+            <div class="stats-card__value">
+                {% if agent_form.enable_sms_summary.value %}ON{% else %}OFF{% endif %}
+            </div>
+        </div>
+
+        <div class="stats-card">
+            <span class="stats-card__label">Transcription</span>
+            <div class="stats-card__value">
+                {% if agent_form.enable_transcription.value %}ON{% else %}OFF{% endif %}
+            </div>
+        </div>
+
+        <div class="stats-card">
+            <span class="stats-card__label">RAG</span>
+            <div class="stats-card__value">
+                {% if agent_form.enable_rag.value %}ON{% else %}OFF{% endif %}
+            </div>
+        </div>
+
+        <div class="stats-card">
+            <span class="stats-card__label">Sources</span>
+            <div class="stats-card__value">{{ knowledge_sources|length }}</div>
+        </div>
+    </div>
+
+    <div class="quick-card">
+        <h4>Conseil</h4>
+        <p>
+            Pour un agent vraiment pertinent, renseigne d’abord le profil entreprise,
+            puis ajoute un site web, un PDF ou des notes internes dans la base documentaire.
+        </p>
+    </div>
+</aside>

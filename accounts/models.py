@@ -43,3 +43,52 @@ class User(AbstractUser):
 
     def __str__(self):
         return self.email
+
+
+class Profile(models.Model):
+    ACTIVITY_CHOICES = [
+        ("restaurant", "Restaurant"),
+        ("medical", "Cabinet médical"),
+        ("salon", "Salon / Beauté"),
+        ("immobilier", "Immobilier"),
+        ("artisan", "Artisan"),
+        ("autre", "Autre"),
+    ]
+
+    user = models.OneToOneField(
+        User,
+        on_delete=models.CASCADE,
+        related_name="profile",
+    )
+
+    phone = models.CharField(max_length=30, blank=True)
+    company_name = models.CharField(max_length=255, blank=True)
+    activity_type = models.CharField(
+        max_length=50,
+        choices=ACTIVITY_CHOICES,
+        blank=True,
+    )
+
+    business_email = models.EmailField(blank=True)
+
+    # On harmonise avec le form
+    website_url = models.URLField(blank=True)
+
+    address = models.CharField(max_length=255, blank=True)
+    city = models.CharField(max_length=120, blank=True)
+    postal_code = models.CharField(max_length=20, blank=True)
+    country = models.CharField(max_length=120, default="France", blank=True)
+
+    business_description = models.TextField(blank=True)
+    opening_hours = models.TextField(blank=True)
+
+    # Notes internes / consignes métier
+    extra_notes = models.TextField(blank=True)
+
+    logo = models.ImageField(upload_to="logos/", blank=True, null=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.company_name or self.user.email

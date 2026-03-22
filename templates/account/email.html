@@ -5,13 +5,469 @@
 {% block auth_card_class %}auth-card--wide{% endblock %}
 
 {% block account_content %}
+<style>
+    .manage-top-grid {
+        display: grid;
+        grid-template-columns: 1.2fr 0.8fr;
+        gap: 18px;
+        margin-bottom: 24px;
+    }
+
+    .manage-panel {
+        background: rgba(255, 255, 255, 0.72);
+        border: 1px solid rgba(106, 47, 216, 0.10);
+        border-radius: 18px;
+        padding: 20px;
+        box-shadow: 0 14px 34px rgba(106, 47, 216, 0.08);
+        backdrop-filter: blur(10px);
+    }
+
+    .manage-panel-title {
+        margin: 0 0 8px;
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: #18181b;
+    }
+
+    .manage-panel-text {
+        margin: 0;
+        color: #5f6472;
+        line-height: 1.65;
+        font-size: 0.95rem;
+    }
+
+    .manage-panel-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 16px;
+        margin-bottom: 14px;
+    }
+
+    .manage-panel-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 7px 12px;
+        border-radius: 999px;
+        background: rgba(106, 47, 216, 0.08);
+        color: #6a2fd8;
+        font-size: 0.82rem;
+        font-weight: 700;
+        white-space: nowrap;
+    }
+
+    .dashboard-shortcuts {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 16px;
+    }
+
+    .btn-soft {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 10px 15px;
+        min-height: 42px;
+        border-radius: 12px;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 0.92rem;
+        transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+        cursor: pointer;
+        white-space: nowrap;
+        color: #4b4b6a;
+        background: rgba(255, 255, 255, 0.70);
+        border: 1px solid rgba(106, 47, 216, 0.14);
+        box-shadow: 0 8px 20px rgba(106, 47, 216, 0.08);
+    }
+
+    .btn-soft:hover {
+        transform: translateY(-1px);
+        background: rgba(255, 255, 255, 0.92);
+        border-color: rgba(106, 47, 216, 0.24);
+        box-shadow: 0 12px 24px rgba(106, 47, 216, 0.12);
+        color: #2f2f46;
+    }
+
+    .agent-list {
+        display: grid;
+        gap: 12px;
+        margin-top: 14px;
+    }
+
+    .agent-card {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 14px;
+        padding: 14px 16px;
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.66);
+        border: 1px solid rgba(106, 47, 216, 0.10);
+    }
+
+    .agent-card-main {
+        min-width: 0;
+    }
+
+    .agent-card-name {
+        margin: 0 0 4px;
+        font-size: 0.98rem;
+        font-weight: 700;
+        color: #191923;
+    }
+
+    .agent-card-meta {
+        margin: 0;
+        color: #646b78;
+        font-size: 0.88rem;
+        line-height: 1.5;
+    }
+
+    .agent-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 7px 10px;
+        border-radius: 999px;
+        background: rgba(34, 197, 94, 0.10);
+        color: #15803d;
+        font-size: 0.82rem;
+        font-weight: 700;
+        white-space: nowrap;
+    }
+
+    .agent-status::before {
+        content: "";
+        width: 8px;
+        height: 8px;
+        border-radius: 999px;
+        background: #22c55e;
+        display: inline-block;
+    }
+
+    .email-section-title {
+        margin: 28px 0 10px;
+        font-size: 1rem;
+        font-weight: 700;
+        color: #171717;
+    }
+
+    .auth-info {
+        margin-bottom: 16px;
+        padding: 14px 16px;
+        border-radius: 14px;
+        background: linear-gradient(180deg, rgba(106, 47, 216, 0.06), rgba(91, 107, 255, 0.04));
+        border: 1px solid rgba(106, 47, 216, 0.10);
+        color: #535b6b;
+        line-height: 1.65;
+        font-size: 0.94rem;
+    }
+
+    .auth-table {
+        width: 100%;
+        overflow: hidden;
+        border-radius: 16px;
+        border: 1px solid rgba(106, 47, 216, 0.08);
+        background: rgba(255, 255, 255, 0.78);
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    .auth-table thead th {
+        background: rgba(106, 47, 216, 0.04);
+        color: #242438;
+        font-weight: 700;
+        font-size: 0.92rem;
+    }
+
+    .auth-table td,
+    .auth-table th {
+        padding: 15px 16px;
+        vertical-align: middle;
+        text-align: left;
+    }
+
+    .auth-table tbody tr:not(:last-child) td {
+        border-bottom: 1px solid rgba(106, 47, 216, 0.06);
+    }
+
+    .auth-table tbody tr:hover td {
+        background: rgba(106, 47, 216, 0.02);
+    }
+
+    .auth-row-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .btn-outline {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 38px;
+        padding: 8px 12px;
+        border-radius: 10px;
+        border: 1px solid rgba(106, 47, 216, 0.14);
+        background: rgba(255, 255, 255, 0.78);
+        color: #4c4f63;
+        font-weight: 600;
+        font-size: 0.88rem;
+        line-height: 1;
+        transition: all 0.2s ease;
+        cursor: pointer;
+    }
+
+    .btn-outline:hover {
+        background: rgba(106, 47, 216, 0.06);
+        border-color: rgba(106, 47, 216, 0.22);
+        color: #341b73;
+    }
+
+    .auth-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(34, 197, 94, 0.10);
+        color: #15803d;
+        border: 1px solid rgba(34, 197, 94, 0.14);
+        padding: 6px 10px;
+        border-radius: 999px;
+        font-weight: 700;
+        font-size: 0.82rem;
+    }
+
+    .auth-muted {
+        color: #7a8190;
+        font-weight: 500;
+        font-size: 0.9rem;
+    }
+
+    .auth-divider {
+        margin-top: 30px;
+        margin-bottom: 18px;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+
+    .auth-divider::before,
+    .auth-divider::after {
+        content: "";
+        flex: 1;
+        height: 1px;
+        background: linear-gradient(90deg, rgba(106, 47, 216, 0), rgba(106, 47, 216, 0.18), rgba(106, 47, 216, 0));
+    }
+
+    .auth-divider span {
+        padding: 0 4px;
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: #5a6172;
+        white-space: nowrap;
+    }
+
+    /* ---- amélioration visuelle de la fin ---- */
+
+    .auth-form {
+        margin-top: 0;
+        padding: 22px;
+        border-radius: 18px;
+        border: 1px solid rgba(106, 47, 216, 0.10);
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(248, 250, 252, 0.96));
+        box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
+    }
+
+    .auth-form .form-group {
+        gap: 10px;
+    }
+
+    .auth-form input[type="email"] {
+        height: 50px;
+        border-radius: 14px;
+        background: #fff;
+    }
+
+    /* bouton principal de cette page seulement */
+    .auth-card .auth-actions {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-top: 16px;
+        width: 100%;
+    }
+
+    .auth-card .auth-actions .btn,
+    .auth-card .auth-actions .btn-nav {
+        width: auto;
+        min-height: 46px;
+        padding: 0 18px;
+        border-radius: 14px;
+        font-size: 0.92rem;
+        font-weight: 700;
+        box-shadow: 0 12px 24px rgba(91, 107, 255, 0.18);
+    }
+
+    .auth-card .auth-actions .btn:hover,
+    .auth-card .auth-actions .btn-nav:hover {
+        box-shadow: 0 16px 30px rgba(91, 107, 255, 0.24);
+    }
+
+    /* radio plus propre */
+    .auth-table input[type="radio"] {
+        width: 18px;
+        height: 18px;
+        accent-color: #5b6bff;
+        cursor: pointer;
+    }
+
+    @media (max-width: 920px) {
+        .manage-top-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .agent-card {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+    }
+
+    @media (max-width: 640px) {
+        .auth-table,
+        .auth-table thead,
+        .auth-table tbody,
+        .auth-table th,
+        .auth-table td,
+        .auth-table tr {
+            display: block;
+            width: 100%;
+        }
+
+        .auth-table thead {
+            display: none;
+        }
+
+        .auth-table tbody tr {
+            padding: 14px;
+            border-bottom: 1px solid rgba(106, 47, 216, 0.08);
+        }
+
+        .auth-table tbody tr:last-child {
+            border-bottom: none;
+        }
+
+        .auth-table td {
+            padding: 8px 0;
+            border: none !important;
+        }
+
+        .auth-row-actions {
+            margin-top: 6px;
+        }
+
+        .auth-card .auth-actions .btn,
+        .auth-card .auth-actions .btn-nav {
+            width: 100%;
+        }
+
+        .btn-soft {
+            width: 100%;
+        }
+
+        .auth-form {
+            padding: 18px;
+        }
+    }
+</style>
+    
 <span class="auth-eyebrow">Compte</span>
 <h1 class="auth-title">Adresses email</h1>
 <p class="auth-subtitle">
-    Gérez l’adresse principale associée à votre compte.
+    Gérez l’adresse principale associée à votre compte et accédez rapidement à la configuration de votre espace.
 </p>
 
+<div class="manage-top-grid">
+    <section class="manage-panel">
+        <div class="manage-panel-head">
+            <div>
+                <h2 class="manage-panel-title">Mon espace</h2>
+                <p class="manage-panel-text">
+                    Retrouvez ici les accès rapides vers la configuration de votre activité, de votre agent vocal
+                    et des options principales de votre compte Décroche.ai.
+                </p>
+            </div>
+            <span class="manage-panel-badge">Configuration</span>
+        </div>
+
+        <div class="dashboard-shortcuts">
+            <a href="/dashboard/" class="btn-soft">
+                Ouvrir le dashboard
+            </a>
+
+            <a href="{% url 'account_email' %}" class="btn-soft">
+                Gérer les emails
+            </a>
+        </div>
+    </section>
+
+    <section class="manage-panel">
+        <div class="manage-panel-head">
+            <div>
+                <h2 class="manage-panel-title">Agent vocal</h2>
+                <p class="manage-panel-text">
+                    Aperçu rapide de l’agent actuellement configuré sur votre compte.
+                </p>
+            </div>
+            <span class="manage-panel-badge">IA</span>
+        </div>
+
+        <div class="agent-list">
+            <div class="agent-card">
+                <div class="agent-card-main">
+                    <p class="agent-card-name">
+                        {% if user.agent_settings.ai_name %}
+                            {{ user.agent_settings.ai_name }}
+                        {% else %}
+                            Assistant IA
+                        {% endif %}
+                    </p>
+                    <p class="agent-card-meta">
+                        Ton :
+                        {% if user.agent_settings.tone %}
+                            {{ user.agent_settings.tone }}
+                        {% else %}
+                            non défini
+                        {% endif %}
+                        <br>
+                        Numéro :
+                        {% if user.agent_settings.twilio_phone_number %}
+                            {{ user.agent_settings.twilio_phone_number }}
+                        {% else %}
+                            non configuré
+                        {% endif %}
+                    </p>
+                </div>
+
+                <div class="agent-status">
+                    Configuré
+                </div>
+            </div>
+        </div>
+
+        <div class="dashboard-shortcuts">
+            <a href="/dashboard/#ia" class="btn-soft">
+                Modifier l’agent
+            </a>
+        </div>
+    </section>
+</div>
+
 {% if user.emailaddress_set.all %}
+    <div class="email-section-title">Emails enregistrés</div>
+
     <div class="auth-info">
         Sélectionnez l’adresse principale, vérifiez-la si besoin, ou supprimez une adresse secondaire.
     </div>
