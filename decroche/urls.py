@@ -8,6 +8,7 @@ urlpatterns = [
     path("", include("allauth.urls")),
     path("", include("core.urls")),
     path("", include("accounts.urls")),
+    path("", include("calls.urls")),
 ]
 
 if settings.DEBUG:
