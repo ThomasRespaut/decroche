@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import os
 from pathlib import Path
+
 from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -9,9 +10,17 @@ load_dotenv(BASE_DIR / ".env")
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "django-insecure-change-me")
 DEBUG = os.getenv("DEBUG", "True").lower() == "true"
 
-ALLOWED_HOSTS = ["127.0.0.1", "localhost", "0.0.0.0"]
+ALLOWED_HOSTS = [
+    "127.0.0.1",
+    "localhost",
+    "0.0.0.0",
+    "thomasrespaut.fr",
+    "www.thomasrespaut.fr",
+]
 
 CSRF_TRUSTED_ORIGINS = [
+    "https://thomasrespaut.fr",
+    "https://www.thomasrespaut.fr",
     "http://127.0.0.1:8000",
     "http://localhost:8000",
 ]
@@ -24,15 +33,12 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "django.contrib.sites",
-
     "channels",
-
     "allauth",
     "allauth.account",
     "allauth.socialaccount",
     "allauth.socialaccount.providers.google",
     "allauth.socialaccount.providers.apple",
-
     "core",
     "accounts",
     "calls",
@@ -46,18 +52,14 @@ AUTHENTICATION_BACKENDS = [
     "allauth.account.auth_backends.AuthenticationBackend",
 ]
 
-# IMPORTANT : custom user model
 AUTH_USER_MODEL = "accounts.User"
 
 LOGIN_REDIRECT_URL = "/"
 LOGOUT_REDIRECT_URL = "/"
 
-# allauth moderne
 ACCOUNT_LOGIN_METHODS = {"email"}
 ACCOUNT_SIGNUP_FIELDS = ["email*", "password1*", "password2*"]
 ACCOUNT_EMAIL_VERIFICATION = "none"
-
-# Si ton modèle User n'utilise pas de username
 ACCOUNT_USER_MODEL_USERNAME_FIELD = None
 
 MIDDLEWARE = [
@@ -115,8 +117,6 @@ STATIC_URL = "/static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
-#STATIC_ROOT = None
-
 if DEBUG:
     STATICFILES_STORAGE = "django.contrib.staticfiles.storage.StaticFilesStorage"
 else:
@@ -140,7 +140,8 @@ OPENAI_VOICE = os.getenv("OPENAI_VOICE", "marin")
 TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID", "")
 TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN", "")
 TWILIO_TEST_CALLER_NUMBER = os.getenv("TWILIO_TEST_CALLER_NUMBER", "")
+TWILIO_NUMBER = os.getenv("TWILIO_NUMBER", "")
+MY_PHONE_NUMBER = os.getenv("MY_PHONE_NUMBER", "")
 
-PUBLIC_BASE_URL = os.getenv("PUBLIC_BASE_URL", "http://127.0.0.1:8000").rstrip("/")
-PUBLIC_WSS_BASE_URL = os.getenv("PUBLIC_WSS_BASE_URL", "ws://127.0.0.1:8000").rstrip("/")
-
+PUBLIC_BASE_URL = os.getenv("PUBLIC_BASE_URL", "https://thomasrespaut.fr").rstrip("/")
+PUBLIC_WSS_BASE_URL = os.getenv("PUBLIC_WSS_BASE_URL", "wss://thomasrespaut.fr").rstrip("/")
