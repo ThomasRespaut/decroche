@@ -1,4 +1,3 @@
-cat > /var/www/decroche/decroche/settings.py <<'EOF'
 # -*- coding: utf-8 -*-
 import os
 from pathlib import Path
@@ -34,15 +33,12 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "django.contrib.sites",
-
     "channels",
-
     "allauth",
     "allauth.account",
     "allauth.socialaccount",
     "allauth.socialaccount.providers.google",
     "allauth.socialaccount.providers.apple",
-
     "core",
     "accounts",
     "calls",
