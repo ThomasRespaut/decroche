@@ -1,9 +1,7 @@
 # calls/consumers.py
 import asyncio
-import base64
 import json
 import os
-from urllib.parse import parse_qs
 
 import websockets
 from asgiref.sync import sync_to_async
@@ -33,51 +31,10 @@ class TwilioStreamConsumer(AsyncWebsocketConsumer):
         self.openai_ws = None
         self.openai_receiver_task = None
         self.call_started_at = timezone.now()
-
-        query_string = self.scope.get("query_string", b"").decode()
-        params = parse_qs(query_string)
-        self.call_sid = (params.get("call_sid") or [None])[0]
-
-        print("parsed query_string =", query_string)
-        print("parsed call_sid =", self.call_sid)
+        self.openai_ready = False
 
         await self.accept()
         print("=== WS ACCEPTED ===")
-
-        if not self.call_sid:
-            print("=== NO CALL SID, CLOSING ===")
-            await self.close()
-            return
-
-        self.call_session = await self.get_call_session(self.call_sid)
-        print("call_session =", self.call_session)
-
-        if not self.call_session:
-            print("=== CALL SESSION NOT FOUND, CLOSING ===")
-            await self.close()
-            return
-
-        self.agent = await self.get_agent(self.call_session.agent_id)
-        print("agent =", self.agent)
-
-        if not self.agent:
-            print("=== AGENT NOT FOUND, CLOSING ===")
-            await self.close()
-            return
-
-        self.business_profile = await self.get_business_profile(self.agent.user_id)
-        print("business_profile =", self.business_profile)
-
-        try:
-            await self.connect_openai()
-            await self.init_openai_session()
-            self.openai_receiver_task = asyncio.create_task(
-                self.forward_openai_to_twilio()
-            )
-            print("=== OPENAI RECEIVER TASK STARTED ===")
-        except Exception as exc:
-            print("=== ERROR DURING OPENAI CONNECT/INIT ===", repr(exc))
-            await self.close()
 
     async def disconnect(self, close_code):
         print("=== WS DISCONNECT ===", close_code)
@@ -112,18 +69,56 @@ class TwilioStreamConsumer(AsyncWebsocketConsumer):
         if event_type == "start":
             start_data = data.get("start", {})
             self.stream_sid = start_data.get("streamSid") or self.stream_sid
+            self.call_sid = start_data.get("callSid") or self.call_sid
+
             print("start_data =", start_data)
             print("stream_sid =", self.stream_sid)
+            print("call_sid =", self.call_sid)
 
-            if self.call_session:
-                await self.update_stream_sid(self.call_session.id, self.stream_sid)
+            if not self.call_sid:
+                print("=== NO CALL SID IN START EVENT, CLOSING ===")
+                await self.close()
+                return
+
+            self.call_session = await self.get_call_session(self.call_sid)
+            print("call_session =", self.call_session)
+
+            if not self.call_session:
+                print("=== CALL SESSION NOT FOUND, CLOSING ===")
+                await self.close()
+                return
+
+            await self.update_stream_sid(self.call_session.id, self.stream_sid)
+
+            self.agent = await self.get_agent(self.call_session.agent_id)
+            print("agent =", self.agent)
+
+            if not self.agent:
+                print("=== AGENT NOT FOUND, CLOSING ===")
+                await self.close()
+                return
+
+            self.business_profile = await self.get_business_profile(self.agent.user_id)
+            print("business_profile =", self.business_profile)
+
+            try:
+                await self.connect_openai()
+                await self.init_openai_session()
+                self.openai_receiver_task = asyncio.create_task(
+                    self.forward_openai_to_twilio()
+                )
+                self.openai_ready = True
+                print("=== OPENAI RECEIVER TASK STARTED ===")
+            except Exception as exc:
+                print("=== ERROR DURING OPENAI CONNECT/INIT ===", repr(exc))
+                await self.close()
 
         elif event_type == "media":
             media = data.get("media", {})
             payload = media.get("payload")
-            print("media received, payload exists =", bool(payload))
+            print("media received, payload exists =", bool(payload), "openai_ready =", self.openai_ready)
 
-            if payload and self.openai_ws:
+            if payload and self.openai_ws and self.openai_ready:
                 await self.send_audio_to_openai(payload)
 
         elif event_type == "stop":
@@ -273,7 +268,6 @@ class TwilioStreamConsumer(AsyncWebsocketConsumer):
                             )
         except asyncio.CancelledError:
             print("=== OPENAI LOOP CANCELLED ===")
-            pass
         except Exception as exc:
             print("=== ERROR IN OPENAI LOOP ===", repr(exc))
 
