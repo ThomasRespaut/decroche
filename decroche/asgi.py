@@ -1,4 +1,3 @@
-# /var/www/decroche/decroche/asgi.py
 # -*- coding: utf-8 -*-
 import os
 
