@@ -149,6 +149,7 @@ class TwilioStreamConsumer(AsyncWebsocketConsumer):
         print("voice =", self.agent.voice)
         print("model =", REALTIME_MODEL)
 
+    # 1) dans init_openai_session(), remplace le greeting par une simple response.create guidée
     async def init_openai_session(self):
         instructions = await self.build_instructions()
         print("=== BUILD INSTRUCTIONS DONE ===")
@@ -171,29 +172,18 @@ class TwilioStreamConsumer(AsyncWebsocketConsumer):
         await self.openai_ws.send(json.dumps(session_payload))
         print("=== SESSION.UPDATE SENT ===")
 
-        greeting_text = self.agent.greeting_message.strip() if self.agent.greeting_message else ""
+        greeting_text = (self.agent.greeting_message or "").strip()
         print("greeting_text =", greeting_text)
 
         if greeting_text:
             await self.openai_ws.send(json.dumps({
-                "type": "conversation.item.create",
-                "item": {
-                    "type": "message",
-                    "role": "assistant",
-                    "content": [
-                        {
-                            "type": "input_text",
-                            "text": greeting_text,
-                        }
-                    ],
+                "type": "response.create",
+                "response": {
+                    "modalities": ["audio", "text"],
+                    "instructions": greeting_text,
                 },
             }))
-            print("=== GREETING conversation.item.create SENT ===")
-
-            await self.openai_ws.send(json.dumps({
-                "type": "response.create",
-            }))
-            print("=== response.create SENT ===")
+            print("=== GREETING response.create SENT ===")
 
     async def send_audio_to_openai(self, base64_ulaw_payload):
         if not self.openai_ws:
@@ -205,6 +195,7 @@ class TwilioStreamConsumer(AsyncWebsocketConsumer):
             "audio": base64_ulaw_payload,
         }))
 
+    # 2) dans forward_openai_to_twilio(), loggue TOUS les événements OpenAI au début
     async def forward_openai_to_twilio(self):
         print("=== FORWARD OPENAI TO TWILIO LOOP STARTED ===")
         try:
@@ -212,6 +203,7 @@ class TwilioStreamConsumer(AsyncWebsocketConsumer):
                 data = json.loads(message)
                 event_type = data.get("type")
                 print("=== OPENAI EVENT ===", event_type)
+                print("OPENAI DATA PREVIEW =", json.dumps(data)[:1000])
 
                 if event_type == "response.audio.delta":
                     audio_delta = data.get("delta")
