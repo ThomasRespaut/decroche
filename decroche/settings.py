@@ -149,4 +149,3 @@ MY_PHONE_NUMBER = os.getenv("MY_PHONE_NUMBER", "")
 
 PUBLIC_BASE_URL = os.getenv("PUBLIC_BASE_URL", "https://thomasrespaut.fr").rstrip("/")
 PUBLIC_WSS_BASE_URL = os.getenv("PUBLIC_WSS_BASE_URL", "wss://thomasrespaut.fr").rstrip("/")
-EOF
