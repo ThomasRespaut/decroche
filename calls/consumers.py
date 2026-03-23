@@ -18,11 +18,6 @@ REALTIME_MODEL = getattr(settings, "OPENAI_REALTIME_MODEL", "gpt-realtime")
 
 class TwilioStreamConsumer(AsyncWebsocketConsumer):
     async def connect(self):
-        print("=== WS CONNECT CALLED ===")
-        print("scope type =", self.scope.get("type"))
-        print("path =", self.scope.get("path"))
-        print("query_string raw =", self.scope.get("query_string"))
-
         self.stream_sid = None
         self.call_sid = None
         self.call_session = None
@@ -34,10 +29,14 @@ class TwilioStreamConsumer(AsyncWebsocketConsumer):
         self.openai_ready = False
 
         await self.accept()
-        print("=== WS ACCEPTED ===")
 
     async def disconnect(self, close_code):
-        print("=== WS DISCONNECT ===", close_code)
+        print(
+            "=== TWILIO WS DISCONNECT ===",
+            f"call_sid={self.call_sid}",
+            f"stream_sid={self.stream_sid}",
+            f"code={close_code}",
+        )
 
         if self.openai_receiver_task:
             self.openai_receiver_task.cancel()
@@ -53,53 +52,47 @@ class TwilioStreamConsumer(AsyncWebsocketConsumer):
 
     async def receive(self, text_data=None, bytes_data=None):
         if not text_data:
-            print("=== WS RECEIVE WITH NO TEXT_DATA ===")
             return
 
         try:
             data = json.loads(text_data)
-        except Exception as exc:
-            print("=== ERROR PARSING WS JSON ===", repr(exc))
-            print("raw text_data =", text_data[:500])
+        except Exception:
+            print("=== ERROR PARSING TWILIO WS JSON ===")
             return
 
         event_type = data.get("event")
-        print("=== WS EVENT ===", event_type)
 
         if event_type == "start":
             start_data = data.get("start", {})
             self.stream_sid = start_data.get("streamSid") or self.stream_sid
             self.call_sid = start_data.get("callSid") or self.call_sid
 
-            print("start_data =", start_data)
-            print("stream_sid =", self.stream_sid)
-            print("call_sid =", self.call_sid)
+            print(
+                "=== TWILIO STREAM START ===",
+                f"call_sid={self.call_sid}",
+                f"stream_sid={self.stream_sid}",
+            )
 
             if not self.call_sid:
-                print("=== NO CALL SID IN START EVENT, CLOSING ===")
+                print("=== MISSING CALL SID IN START EVENT ===")
                 await self.close()
                 return
 
             self.call_session = await self.get_call_session(self.call_sid)
-            print("call_session =", self.call_session)
-
             if not self.call_session:
-                print("=== CALL SESSION NOT FOUND, CLOSING ===")
+                print(f"=== CALL SESSION NOT FOUND === call_sid={self.call_sid}")
                 await self.close()
                 return
 
             await self.update_stream_sid(self.call_session.id, self.stream_sid)
 
             self.agent = await self.get_agent(self.call_session.agent_id)
-            print("agent =", self.agent)
-
             if not self.agent:
-                print("=== AGENT NOT FOUND, CLOSING ===")
+                print(f"=== AGENT NOT FOUND === call_sid={self.call_sid}")
                 await self.close()
                 return
 
             self.business_profile = await self.get_business_profile(self.agent.user_id)
-            print("business_profile =", self.business_profile)
 
             try:
                 await self.connect_openai()
@@ -108,25 +101,35 @@ class TwilioStreamConsumer(AsyncWebsocketConsumer):
                     self.forward_openai_to_twilio()
                 )
                 self.openai_ready = True
-                print("=== OPENAI RECEIVER TASK STARTED ===")
+
+                print(
+                    "=== CALL SESSION READY ===",
+                    f"call_sid={self.call_sid}",
+                    f"agent_id={self.agent.id}",
+                    f"user_id={self.agent.user_id}",
+                )
             except Exception as exc:
-                print("=== ERROR DURING OPENAI CONNECT/INIT ===", repr(exc))
+                print(
+                    "=== ERROR DURING OPENAI CONNECT/INIT ===",
+                    f"call_sid={self.call_sid}",
+                    repr(exc),
+                )
                 await self.close()
 
         elif event_type == "media":
             media = data.get("media", {})
             payload = media.get("payload")
-            print("media received, payload exists =", bool(payload), "openai_ready =", self.openai_ready)
 
             if payload and self.openai_ws and self.openai_ready:
                 await self.send_audio_to_openai(payload)
 
         elif event_type == "stop":
-            print("=== WS STOP RECEIVED ===")
+            print(
+                "=== TWILIO STREAM STOP ===",
+                f"call_sid={self.call_sid}",
+                f"stream_sid={self.stream_sid}",
+            )
             await self.close()
-
-        else:
-            print("=== UNHANDLED WS EVENT ===", event_type)
 
     async def connect_openai(self):
         api_key = os.getenv("OPENAI_API_KEY") or getattr(settings, "OPENAI_API_KEY", None)
@@ -134,7 +137,6 @@ class TwilioStreamConsumer(AsyncWebsocketConsumer):
             raise RuntimeError("OPENAI_API_KEY manquante")
 
         url = f"wss://api.openai.com/v1/realtime?model={REALTIME_MODEL}"
-        print("=== CONNECTING TO OPENAI ===", url)
 
         self.openai_ws = await websockets.connect(
             url,
@@ -145,15 +147,15 @@ class TwilioStreamConsumer(AsyncWebsocketConsumer):
             max_size=None,
         )
 
-        print("=== OPENAI CONNECTED ===")
-        print("voice =", self.agent.voice)
-        print("model =", REALTIME_MODEL)
+        print(
+            "=== OPENAI CONNECTED ===",
+            f"call_sid={self.call_sid}",
+            f"model={REALTIME_MODEL}",
+            f"voice={self.agent.voice}",
+        )
 
-    # 1) dans init_openai_session(), remplace le greeting par une simple response.create guidée
     async def init_openai_session(self):
         instructions = await self.build_instructions()
-        print("=== BUILD INSTRUCTIONS DONE ===")
-        print("instructions preview =", instructions[:500])
 
         session_payload = {
             "type": "session.update",
@@ -170,11 +172,8 @@ class TwilioStreamConsumer(AsyncWebsocketConsumer):
         }
 
         await self.openai_ws.send(json.dumps(session_payload))
-        print("=== SESSION.UPDATE SENT ===")
 
         greeting_text = (self.agent.greeting_message or "").strip()
-        print("greeting_text =", greeting_text)
-
         if greeting_text:
             await self.openai_ws.send(json.dumps({
                 "type": "response.create",
@@ -183,11 +182,15 @@ class TwilioStreamConsumer(AsyncWebsocketConsumer):
                     "instructions": greeting_text,
                 },
             }))
-            print("=== GREETING response.create SENT ===")
+
+        print(
+            "=== OPENAI SESSION INITIALIZED ===",
+            f"call_sid={self.call_sid}",
+            f"greeting={'yes' if greeting_text else 'no'}",
+        )
 
     async def send_audio_to_openai(self, base64_ulaw_payload):
         if not self.openai_ws:
-            print("=== OPENAI WS MISSING, AUDIO NOT SENT ===")
             return
 
         await self.openai_ws.send(json.dumps({
@@ -195,19 +198,16 @@ class TwilioStreamConsumer(AsyncWebsocketConsumer):
             "audio": base64_ulaw_payload,
         }))
 
-    # 2) dans forward_openai_to_twilio(), loggue TOUS les événements OpenAI au début
     async def forward_openai_to_twilio(self):
-        print("=== FORWARD OPENAI TO TWILIO LOOP STARTED ===")
+        assistant_response_logged = False
+
         try:
             async for message in self.openai_ws:
                 data = json.loads(message)
                 event_type = data.get("type")
-                print("=== OPENAI EVENT ===", event_type)
-                print("OPENAI DATA PREVIEW =", json.dumps(data)[:1000])
 
                 if event_type == "response.audio.delta":
                     audio_delta = data.get("delta")
-                    print("audio delta exists =", bool(audio_delta), "stream_sid =", self.stream_sid)
 
                     if audio_delta and self.stream_sid:
                         await self.send(text_data=json.dumps({
@@ -221,12 +221,10 @@ class TwilioStreamConsumer(AsyncWebsocketConsumer):
                 elif event_type == "response.audio_transcript.delta":
                     transcript_delta = data.get("delta", "")
                     if transcript_delta and self.call_session:
-                        print("assistant transcript delta =", transcript_delta[:200])
                         await self.append_transcript(self.call_session.id, transcript_delta)
 
                 elif event_type == "conversation.item.input_audio_transcription.completed":
                     transcript_text = data.get("transcript", "").strip()
-                    print("user transcript =", transcript_text)
 
                     if transcript_text and self.call_session:
                         await self.create_call_message(
@@ -236,7 +234,6 @@ class TwilioStreamConsumer(AsyncWebsocketConsumer):
                         )
 
                 elif event_type == "response.done":
-                    print("=== OPENAI RESPONSE DONE ===")
                     output = data.get("response", {}).get("output", [])
                     for item in output:
                         if item.get("type") != "message":
@@ -250,7 +247,6 @@ class TwilioStreamConsumer(AsyncWebsocketConsumer):
                                     text_parts.append(text_value)
 
                         full_text = " ".join(text_parts).strip()
-                        print("assistant full_text =", full_text)
 
                         if full_text and self.call_session:
                             await self.create_call_message(
@@ -258,10 +254,29 @@ class TwilioStreamConsumer(AsyncWebsocketConsumer):
                                 role="assistant",
                                 content=full_text,
                             )
+                            assistant_response_logged = True
+
+                    if assistant_response_logged:
+                        print(
+                            "=== OPENAI RESPONSE COMPLETED ===",
+                            f"call_sid={self.call_sid}",
+                        )
+
+                elif event_type == "error":
+                    print(
+                        "=== OPENAI ERROR EVENT ===",
+                        f"call_sid={self.call_sid}",
+                        json.dumps(data)[:1000],
+                    )
+
         except asyncio.CancelledError:
-            print("=== OPENAI LOOP CANCELLED ===")
+            pass
         except Exception as exc:
-            print("=== ERROR IN OPENAI LOOP ===", repr(exc))
+            print(
+                "=== ERROR IN OPENAI LOOP ===",
+                f"call_sid={self.call_sid}",
+                repr(exc),
+            )
 
     async def build_instructions(self):
         return await sync_to_async(build_agent_system_prompt)(

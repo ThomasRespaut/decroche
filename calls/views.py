@@ -13,9 +13,6 @@ from agents.models import AgentSettings, CallSession
 def normalize_phone(value: str) -> str:
     """
     Normalise un numéro Twilio reçu en POST.
-    - supprime espaces parasites
-    - garde le format E.164 si présent
-    - remet un + devant une suite de chiffres si besoin
     """
     value = (value or "").strip()
     value = value.replace(" ", "")
@@ -40,14 +37,11 @@ def twilio_incoming_call(request):
     from_number = normalize_phone(request.POST.get("From"))
     call_sid = (request.POST.get("CallSid") or "").strip()
 
-    print("=== TWILIO INCOMING CALL ===")
-    print("To =", called_number)
-    print("From =", from_number)
-    print("CallSid =", call_sid)
-
     print(
-        "=== NUMÉROS AGENTS EN BASE ===",
-        list(AgentSettings.objects.values_list("twilio_phone_number", flat=True))
+        "=== TWILIO INCOMING CALL ===",
+        f"call_sid={call_sid}",
+        f"to={called_number}",
+        f"from={from_number}",
     )
 
     agent = (
@@ -58,7 +52,11 @@ def twilio_incoming_call(request):
     )
 
     if not agent:
-        print("=== AUCUN AGENT TROUVÉ POUR CE NUMÉRO ===")
+        print(
+            "=== TWILIO AGENT NOT FOUND ===",
+            f"call_sid={call_sid}",
+            f"to={called_number}",
+        )
         xml = """<?xml version="1.0" encoding="UTF-8"?>
 <Response>
     <Say language="fr-FR">Ce numéro n'est pas configuré.</Say>
@@ -103,20 +101,40 @@ def twilio_incoming_call(request):
             session.to_number = called_number
             updated = True
 
+        metadata = session.metadata_json or {}
+        if metadata.get("called_number") != called_number or metadata.get("from_number") != from_number:
+            metadata.update({
+                "twilio_call_sid": call_sid,
+                "called_number": called_number,
+                "from_number": from_number,
+            })
+            session.metadata_json = metadata
+            updated = True
+
         if updated:
             session.save(update_fields=[
                 "status",
                 "started_at",
                 "from_number",
                 "to_number",
+                "metadata_json",
                 "updated_at",
             ])
 
-    print("=== CALL SESSION ===", session.id, "created =", created)
+    print(
+        "=== TWILIO CALL SESSION READY ===",
+        f"call_sid={call_sid}",
+        f"session_id={session.id}",
+        f"agent_id={agent.id}",
+        f"created={created}",
+    )
 
     public_wss_base_url = getattr(settings, "PUBLIC_WSS_BASE_URL", "").rstrip("/")
     if not public_wss_base_url:
-        print("=== PUBLIC_WSS_BASE_URL MANQUANT ===")
+        print(
+            "=== PUBLIC_WSS_BASE_URL MISSING ===",
+            f"call_sid={call_sid}",
+        )
         xml = """<?xml version="1.0" encoding="UTF-8"?>
 <Response>
     <Say language="fr-FR">Le service n'est pas disponible pour le moment.</Say>
@@ -124,10 +142,8 @@ def twilio_incoming_call(request):
 </Response>"""
         return xml_response(xml)
 
-    # Important : Twilio <Stream url="..."> ne supporte pas les query strings.
+    # Twilio <Stream url="..."> ne supporte pas les query strings.
     stream_url = f"{public_wss_base_url}/ws/twilio-stream/"
-
-    print("=== STREAM URL ===", stream_url)
 
     xml = f"""<?xml version="1.0" encoding="UTF-8"?>
 <Response>
@@ -145,40 +161,50 @@ def twilio_call_status_callback(request):
     call_sid = (request.POST.get("CallSid") or "").strip()
     call_status = (request.POST.get("CallStatus") or "").strip()
 
-    print("=== TWILIO STATUS CALLBACK ===")
-    print("CallSid =", call_sid)
-    print("CallStatus =", call_status)
+    allowed_statuses = {
+        "initiated",
+        "ringing",
+        "in_progress",
+        "completed",
+        "busy",
+        "failed",
+        "no_answer",
+        "canceled",
+    }
 
     session = CallSession.objects.filter(call_sid=call_sid).first()
-    if session:
-        allowed_statuses = {
-            "initiated",
-            "ringing",
-            "in_progress",
-            "completed",
-            "busy",
-            "failed",
-            "no_answer",
-            "canceled",
-        }
+    if not session:
+        print(
+            "=== TWILIO STATUS SESSION NOT FOUND ===",
+            f"call_sid={call_sid}",
+            f"status={call_status}",
+        )
+        return HttpResponse("OK")
 
-        if call_status in allowed_statuses:
-            session.status = call_status
+    if call_status in allowed_statuses:
+        session.status = call_status
 
-        if call_status in {"completed", "busy", "failed", "no_answer", "canceled"}:
-            session.ended_at = timezone.now()
-            if session.started_at:
-                session.duration_seconds = max(
-                    0,
-                    int((session.ended_at - session.started_at).total_seconds())
-                )
+    if call_status in {"completed", "busy", "failed", "no_answer", "canceled"}:
+        session.ended_at = timezone.now()
+        if session.started_at:
+            session.duration_seconds = max(
+                0,
+                int((session.ended_at - session.started_at).total_seconds())
+            )
 
-        session.save(update_fields=[
-            "status",
-            "ended_at",
-            "duration_seconds",
-            "updated_at",
-        ])
+    session.save(update_fields=[
+        "status",
+        "ended_at",
+        "duration_seconds",
+        "updated_at",
+    ])
+
+    print(
+        "=== TWILIO STATUS UPDATED ===",
+        f"call_sid={call_sid}",
+        f"status={session.status}",
+        f"duration={session.duration_seconds}",
+    )
 
     return HttpResponse("OK")
 
