@@ -463,7 +463,6 @@
 
             <div class="cta-actions">
                 <a href="#demo" class="btn btn-primary">Essayer la démo</a>
-                <a href="#cta" class="btn btn-secondary">Demander une démo</a>
             </div>
         </div>
     </div>
@@ -505,29 +504,28 @@
                 </p>
 
                 <div class="demo-actions">
-                    <a href="{% url 'live_demo' %}" class="btn btn-primary">Lancer la démo live</a>
+                    <a href="{% url 'live_demo' %}" class="btn btn-tertiary">Lancer la démo live</a>
                 </div>
             </article>
 
             <article class="demo-card">
                 <div class="demo-icon">03</div>
-                <h3>Recevoir un appel de démonstration</h3>
+                <h3>Appeler le numéro de démonstration</h3>
                 <p>
-                    Saisissez votre numéro et laissez l’IA vous appeler pour tester
-                    l’expérience dans des conditions réelles.
+                    Appelez notre ligne de test et simulez une réservation de restaurant
+                    pour découvrir comment Décroche.ai répond, comprend et agit en temps réel.
                 </p>
-
-                <form class="demo-call-form" method="post" action="{% url 'request_demo_call' %}">
-                    {% csrf_token %}
-                    <input
-                        type="tel"
-                        name="phone"
-                        placeholder="06 12 34 56 78"
-                        required
-                    >
-                    <button type="submit" class="btn btn-secondary">Recevoir un appel</button>
-                </form>
+            
+                <div class="demo-phone-box">
+                    <span>Numéro de démonstration</span>
+                    <strong>09 74 99 57 69</strong>
+                </div>
+            
+                <div class="demo-actions">
+                    <a href="tel:+33974995769" class="btn btn-tertiary">Appeler maintenant</a>
+                </div>
             </article>
+            
         </div>
     </div>
 </section>

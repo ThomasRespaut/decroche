@@ -132,6 +132,54 @@ select {
     box-shadow: 0 12px 30px rgba(106, 47, 216, 0.18);
 }
 
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: 12px;
+    padding: 14px 22px;
+    font-weight: 600;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease, background 0.2s ease;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+}
+
+.btn-primary,
+.btn-nav {
+    color: white;
+    background: var(--gradient-button);
+    box-shadow: 0 12px 30px rgba(106, 47, 216, 0.18);
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: 12px;
+    padding: 14px 22px;
+    font-weight: 600;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease, background 0.2s ease;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+}
+
+.btn-primary,
+.btn-nav {
+    color: white;
+    background: var(--gradient-button);
+    box-shadow: 0 12px 30px rgba(106, 47, 216, 0.18);
+}
+
 .btn-secondary {
     background: white;
     color: var(--text);
@@ -140,6 +188,18 @@ select {
 
 .btn-secondary:hover {
     box-shadow: var(--shadow-soft);
+}
+
+.btn-tertiary {
+    background: var(--gradient-button);
+    color: white;
+    border: none;
+    box-shadow: 0 12px 30px rgba(106, 47, 216, 0.18);
+}
+
+.btn-tertiary:hover {
+    box-shadow: var(--shadow-soft);
+    opacity: 0.95;
 }
 
 .hero {
@@ -698,6 +758,7 @@ select {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 1.4rem;
+    align-items: stretch;
 }
 
 .demo-card {
@@ -705,10 +766,14 @@ select {
     border: 1px solid rgba(229, 231, 235, 0.95);
     border-radius: 24px;
     box-shadow: var(--shadow-soft);
-    padding: 1.6rem;
+    padding: 1.8rem 1.6rem;
     display: flex;
     flex-direction: column;
+    justify-content: center;
+    align-items: center;
     gap: 1rem;
+    height: 100%;
+    text-align: center;
 }
 
 .demo-icon {
@@ -721,45 +786,61 @@ select {
     background: linear-gradient(135deg, rgba(46, 166, 247, 0.12), rgba(106, 47, 216, 0.12));
     color: var(--primary);
     font-weight: 700;
+    flex-shrink: 0;
 }
 
 .demo-card h3 {
     font-size: 1.15rem;
     letter-spacing: -0.02em;
+    margin: 0;
 }
 
 .demo-card p {
     color: var(--subtitle);
+    margin: 0;
+}
+
+.demo-audio {
+    width: 100%;
 }
 
 .demo-audio audio {
     width: 100%;
-    margin-top: 0.4rem;
+    margin: 0;
+}
+
+.demo-phone-box {
+    padding: 1rem 1.1rem;
+    border-radius: 16px;
+    background: var(--background-soft);
+    border: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.demo-phone-box span {
+    font-size: 0.9rem;
+    color: var(--subtitle);
+    margin: 0;
+}
+
+.demo-phone-box strong {
+    font-size: 1.15rem;
+    color: var(--text);
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+    margin: 0;
 }
 
 .demo-actions {
-    margin-top: auto;
-}
-
-.demo-call-form {
-    display: flex;
-    flex-direction: column;
-    gap: 0.9rem;
-    margin-top: auto;
-}
-
-.demo-call-form input {
     width: 100%;
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 14px 16px;
-    outline: none;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-.demo-call-form input:focus {
-    border-color: var(--primary);
-    box-shadow: 0 0 0 4px rgba(30, 115, 216, 0.08);
+.demo-actions .btn {
+    width: 100%;
 }
 
 @media (max-width: 980px) {
