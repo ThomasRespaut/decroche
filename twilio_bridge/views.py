@@ -1,25 +1,17 @@
 # twilio_bridge/views.py
+
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
-from django.shortcuts import get_object_or_404
 from twilio.twiml.voice_response import VoiceResponse, Connect, Stream
 
 from .models import OutboundCall
 from .services import launch_outbound_call
 
 
-# -----------------------
-# Health
-# -----------------------
-
 def health(request):
     return HttpResponse("ok", status=200)
 
-
-# -----------------------
-# Inbound voice
-# -----------------------
 
 @csrf_exempt
 def voice(request):
@@ -42,14 +34,11 @@ def voice(request):
 
     connect.append(stream)
     vr.append(connect)
-    vr.hangup()
+
+    # ❌ PAS DE vr.hangup()
 
     return HttpResponse(str(vr), content_type="text/xml")
 
-
-# -----------------------
-# Outbound TwiML
-# -----------------------
 
 @csrf_exempt
 def outbound_bridge_twiml(request):
@@ -66,7 +55,7 @@ def outbound_bridge_twiml(request):
         name="openai-realtime-bridge-outbound",
     )
 
-    stream.parameter(name="target_number", value=to_number)
+    stream.parameter(name="target_number", value=to_number.strip())
     stream.parameter(name="prospect_name", value=prospect_name)
     stream.parameter(name="company", value=company)
     stream.parameter(name="direction", value="outbound")
@@ -74,14 +63,11 @@ def outbound_bridge_twiml(request):
 
     connect.append(stream)
     vr.append(connect)
-    vr.hangup()
+
+    # ❌ PAS DE vr.hangup()
 
     return HttpResponse(str(vr), content_type="text/xml")
 
-
-# -----------------------
-# Launch outbound call
-# -----------------------
 
 @csrf_exempt
 def call_bridge(request):
@@ -124,10 +110,6 @@ def call_bridge(request):
 
         return JsonResponse({"ok": False, "error": str(e)}, status=500)
 
-
-# -----------------------
-# Status callback
-# -----------------------
 
 @csrf_exempt
 def status(request):
