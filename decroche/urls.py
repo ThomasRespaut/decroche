@@ -9,6 +9,7 @@ urlpatterns = [
     path("", include("core.urls")),
     path("", include("accounts.urls")),
     path("", include("calls.urls")),
+    path("twilio-bridge/", include("twilio_bridge.urls")),
 ]
 
 if settings.DEBUG:

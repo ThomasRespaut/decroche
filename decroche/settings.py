@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     "accounts",
     "calls",
     "agents",
+    "twilio_bridge"
 ]
 
 SITE_ID = 1
