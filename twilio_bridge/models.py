@@ -2,6 +2,8 @@
 
 from django.db import models
 
+from core.validators import validate_e164_phone
+
 
 class OutboundCall(models.Model):
     STATUS_CHOICES = [
@@ -16,7 +18,7 @@ class OutboundCall(models.Model):
         ("canceled", "Canceled"),
     ]
 
-    to_number = models.CharField(max_length=30)
+    to_number = models.CharField(max_length=30, validators=[validate_e164_phone])
     prospect_name = models.CharField(max_length=255, blank=True)
     company = models.CharField(max_length=255, blank=True)
     custom_prompt = models.TextField(blank=True)
