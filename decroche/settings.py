@@ -7,23 +7,24 @@ from dotenv import load_dotenv
 BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BASE_DIR / ".env")
 
-SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "django-insecure-change-me")
-DEBUG = os.getenv("DEBUG", "True").lower() == "true"
+DEBUG = os.getenv("DEBUG", "False").lower() == "true"
+SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "")
 
-ALLOWED_HOSTS = [
-    "127.0.0.1",
-    "localhost",
-    "0.0.0.0",
-    "thomasrespaut.fr",
-    "www.thomasrespaut.fr",
-]
+if not SECRET_KEY:
+    if DEBUG:
+        SECRET_KEY = "django-insecure-dev-only-key"
+    else:
+        raise RuntimeError("DJANGO_SECRET_KEY doit être défini quand DEBUG=False")
 
-CSRF_TRUSTED_ORIGINS = [
-    "https://thomasrespaut.fr",
-    "https://www.thomasrespaut.fr",
-    "http://127.0.0.1:8000",
-    "http://localhost:8000",
-]
+ALLOWED_HOSTS = [host.strip() for host in os.getenv(
+    "ALLOWED_HOSTS",
+    "127.0.0.1,localhost,0.0.0.0,thomasrespaut.fr,www.thomasrespaut.fr",
+).split(",") if host.strip()]
+
+CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in os.getenv(
+    "CSRF_TRUSTED_ORIGINS",
+    "https://thomasrespaut.fr,https://www.thomasrespaut.fr,http://127.0.0.1:8000,http://localhost:8000",
+).split(",") if origin.strip()]
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -128,11 +129,21 @@ MEDIA_ROOT = BASE_DIR / "media"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-CHANNEL_LAYERS = {
-    "default": {
-        "BACKEND": "channels.layers.InMemoryChannelLayer",
-    },
-}
+REDIS_URL = os.getenv("REDIS_URL", "")
+
+if REDIS_URL:
+    CHANNEL_LAYERS = {
+        "default": {
+            "BACKEND": "channels_redis.core.RedisChannelLayer",
+            "CONFIG": {"hosts": [REDIS_URL]},
+        },
+    }
+else:
+    CHANNEL_LAYERS = {
+        "default": {
+            "BACKEND": "channels.layers.InMemoryChannelLayer",
+        },
+    }
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
 OPENAI_REALTIME_MODEL = os.getenv("OPENAI_REALTIME_MODEL", "gpt-realtime")

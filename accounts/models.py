@@ -1,6 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 
+from core.validators import validate_e164_phone
+
 
 class UserManager(BaseUserManager):
     use_in_migrations = True
@@ -61,7 +63,7 @@ class Profile(models.Model):
         related_name="profile",
     )
 
-    phone = models.CharField(max_length=30, blank=True)
+    phone = models.CharField(max_length=30, blank=True, validators=[validate_e164_phone])
     company_name = models.CharField(max_length=255, blank=True)
     activity_type = models.CharField(
         max_length=50,

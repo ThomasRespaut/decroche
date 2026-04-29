@@ -1,5 +1,8 @@
+from django.core.exceptions import ValidationError
 from django.db import models
+
 from accounts.models import User
+from core.validators import validate_e164_phone
 
 
 class AgentSettings(models.Model):
@@ -75,6 +78,7 @@ class AgentSettings(models.Model):
         max_length=30,
         blank=True,
         default="",
+        validators=[validate_e164_phone],
         help_text="Numéro Twilio attribué à cet agent, au format international.",
     )
 
@@ -164,6 +168,13 @@ class AgentSettings(models.Model):
     def __str__(self):
         return f"Agent IA - {self.user.email}"
 
+    def clean(self):
+        super().clean()
+        if self.inbound_calls_enabled and not self.twilio_phone_number:
+            raise ValidationError({
+                "twilio_phone_number": "Un numéro Twilio est obligatoire pour activer les appels entrants."
+            })
+
     @property
     def is_twilio_ready(self):
         return bool(
@@ -199,7 +210,7 @@ class BusinessProfile(models.Model):
         choices=ACTIVITY_CHOICES,
         default="other",
     )
-    phone = models.CharField(max_length=30, blank=True, default="")
+    phone = models.CharField(max_length=30, blank=True, default="", validators=[validate_e164_phone])
     website_url = models.URLField(blank=True, default="")
 
     business_description = models.TextField(blank=True, default="")
